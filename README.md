@@ -1,6 +1,3 @@
-# Build Status
-[![Actions Status](https://github.com/SarthakMakhija/storage-engine-workshop/workflows/GoCI/badge.svg)](https://github.com/SarthakMakhija/storage-engine-workshop/actions)
-
 # Idea
 
 This repository will be used in "building storage engine" workshop. As a part of that workshop, we will build a storage engine using LSM tree, but we will not implement
@@ -16,3 +13,9 @@ This repository is supposed to contain the following:
 7. Implementation of "Put", "Get" and "Update"
 8. Implementation of "Get" in Memtable and SSTable
 9. Implementation of "Update" using versioned put
+
+# Build Status
+[![Actions Status](https://github.com/SarthakMakhija/storage-engine-workshop/workflows/GoCI/badge.svg)](https://github.com/SarthakMakhija/storage-engine-workshop/actions)
+
+# Running the tests
+`go test -v ./...`
