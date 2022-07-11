@@ -8,8 +8,8 @@ import (
 
 var (
 	bigEndian         = binary.BigEndian
+	ReservedTotalSize = unsafe.Sizeof(uint32(0))
 	ReservedKeySize   = unsafe.Sizeof(uint32(0))
-	ReservedValueSize = unsafe.Sizeof(uint32(0))
 )
 
 type PersistentSlice struct {
@@ -26,8 +26,8 @@ func NewPersistentSlice(putCommand PutCommand) PersistentSlice {
 	return marshal(putCommand)
 }
 
-func NewPersistentSliceUsingRaw(contents []byte) PersistentSlice {
-	return PersistentSlice{Contents: contents}
+func NewPersistentSliceKeyValuePair(contents []byte) (PersistentSlice, PersistentSlice) {
+	return unmarshal(contents)
 }
 
 func (persistentSlice PersistentSlice) GetPersistentContents() []byte {
@@ -38,28 +38,37 @@ func (persistentSlice PersistentSlice) GetSlice() db.Slice {
 	return db.NewSlice(persistentSlice.GetPersistentContents())
 }
 
-func ActualKeySize(bytes []byte) uint32 {
-	return bigEndian.Uint32(bytes)
-}
-
-func ActualValueSize(bytes []byte) uint32 {
+func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
 func marshal(putCommand PutCommand) PersistentSlice {
-	keySize, valueSize := ReservedKeySize, ReservedValueSize
-	bytes := make([]byte, len(putCommand.key.GetRawContent())+len(putCommand.value.GetRawContent())+int(keySize)+int(valueSize))
+	reservedTotalSize, reservedKeySize := ReservedTotalSize, ReservedKeySize
+	actualTotalSize :=
+		len(putCommand.key.GetRawContent()) +
+			len(putCommand.value.GetRawContent()) +
+			int(reservedKeySize) +
+			int(reservedTotalSize)
+
+	bytes := make([]byte, actualTotalSize)
 	offset := 0
 
-	bigEndian.PutUint32(bytes, uint32(len(putCommand.key.GetRawContent())))
-	offset = offset + int(keySize)
+	bigEndian.PutUint32(bytes, uint32(actualTotalSize))
+	offset = offset + int(reservedTotalSize)
 
-	bigEndian.PutUint32(bytes[offset:], uint32(len(putCommand.value.GetRawContent())))
-	offset = offset + int(valueSize)
+	bigEndian.PutUint32(bytes[offset:], uint32(len(putCommand.key.GetRawContent())))
+	offset = offset + int(reservedKeySize)
 
 	copy(bytes[offset:], putCommand.key.GetRawContent())
 	offset = offset + len(putCommand.key.GetRawContent())
 
 	copy(bytes[offset:], putCommand.value.GetRawContent())
 	return PersistentSlice{Contents: bytes}
+}
+
+func unmarshal(bytes []byte) (PersistentSlice, PersistentSlice) {
+	keySize := bigEndian.Uint32(bytes)
+	keyEndOffset := uint32(ReservedKeySize) + keySize
+
+	return PersistentSlice{Contents: bytes[ReservedKeySize:keyEndOffset]}, PersistentSlice{Contents: bytes[keyEndOffset:]}
 }
