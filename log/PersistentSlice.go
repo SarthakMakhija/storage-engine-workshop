@@ -50,6 +50,7 @@ func marshal(putCommand PutCommand) PersistentSlice {
 			int(reservedKeySize) +
 			int(reservedTotalSize)
 
+	//The way PutCommand is encoded is: 4 bytes for totalSize | 4 bytes for keySize | Key content | Value content
 	bytes := make([]byte, actualTotalSize)
 	offset := 0
 
