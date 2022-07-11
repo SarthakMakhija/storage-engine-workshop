@@ -31,8 +31,8 @@ func (store *Store) ReadAt(offset int64) (PersistentSlice, PersistentSlice, erro
 	if err != nil {
 		return NilPersistentSlice(), NilPersistentSlice(), err
 	}
-	keySize := KeySize(bytes)
-	valueSize := ValueSize(bytes[int(ReservedKeySize):])
+	keySize := ActualKeySize(bytes)
+	valueSize := ActualValueSize(bytes[int(ReservedKeySize):])
 
 	contents := make([]byte, keySize+valueSize)
 	_, err = store.file.ReadAt(contents, offset+int64(ReservedKeySize)+int64(ReservedValueSize))

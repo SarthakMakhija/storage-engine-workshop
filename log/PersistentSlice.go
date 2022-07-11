@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/binary"
+	"storage-engine-workshop/db"
 	"unsafe"
 )
 
@@ -33,11 +34,15 @@ func (persistentSlice PersistentSlice) GetPersistentContents() []byte {
 	return persistentSlice.Contents
 }
 
-func KeySize(bytes []byte) uint32 {
+func (persistentSlice PersistentSlice) GetSlice() db.Slice {
+	return db.NewSlice(persistentSlice.GetPersistentContents())
+}
+
+func ActualKeySize(bytes []byte) uint32 {
 	return BigEndian.Uint32(bytes)
 }
 
-func ValueSize(bytes []byte) uint32 {
+func ActualValueSize(bytes []byte) uint32 {
 	return BigEndian.Uint32(bytes)
 }
 

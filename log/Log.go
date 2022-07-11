@@ -1,7 +1,5 @@
 package log
 
-import "storage-engine-workshop/db"
-
 type WAL struct {
 	directory string
 	store     *Store
@@ -27,5 +25,5 @@ func (log WAL) ReadAt(offset int64) (PutCommand, error) {
 	if err != nil {
 		return PutCommand{}, err
 	}
-	return NewPutCommand(db.NewSlice(key.GetPersistentContents()), db.NewSlice(value.GetPersistentContents())), nil
+	return NewPutCommand(key.GetSlice(), value.GetSlice()), nil
 }
