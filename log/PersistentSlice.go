@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	BigEndian         = binary.BigEndian
+	bigEndian         = binary.BigEndian
 	ReservedKeySize   = unsafe.Sizeof(uint32(0))
 	ReservedValueSize = unsafe.Sizeof(uint32(0))
 )
@@ -39,11 +39,11 @@ func (persistentSlice PersistentSlice) GetSlice() db.Slice {
 }
 
 func ActualKeySize(bytes []byte) uint32 {
-	return BigEndian.Uint32(bytes)
+	return bigEndian.Uint32(bytes)
 }
 
 func ActualValueSize(bytes []byte) uint32 {
-	return BigEndian.Uint32(bytes)
+	return bigEndian.Uint32(bytes)
 }
 
 func marshal(putCommand PutCommand) PersistentSlice {
@@ -51,10 +51,10 @@ func marshal(putCommand PutCommand) PersistentSlice {
 	bytes := make([]byte, len(putCommand.key.GetRawContent())+len(putCommand.value.GetRawContent())+int(keySize)+int(valueSize))
 	offset := 0
 
-	BigEndian.PutUint32(bytes, uint32(len(putCommand.key.GetRawContent())))
+	bigEndian.PutUint32(bytes, uint32(len(putCommand.key.GetRawContent())))
 	offset = offset + int(keySize)
 
-	BigEndian.PutUint32(bytes[offset:], uint32(len(putCommand.value.GetRawContent())))
+	bigEndian.PutUint32(bytes[offset:], uint32(len(putCommand.value.GetRawContent())))
 	offset = offset + int(valueSize)
 
 	copy(bytes[offset:], putCommand.key.GetRawContent())
