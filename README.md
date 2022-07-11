@@ -6,7 +6,7 @@ merge and compaction.
 This repository is supposed to contain the following:
 1. Implementation of Memtable
 2. Implementation of SSTable and write to disk
-3. Implementation of concurrency, either a single write/multiple readers pattern or a singular update queue
+3. Implementation of concurrency, using either a single writer/multiple readers pattern or a singular update queue pattern
 4. Implementation of write-ahead logging
 5. Implementation of transactions
 6. Implementation of Bloom filter
