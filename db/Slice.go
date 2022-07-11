@@ -1,7 +1,7 @@
 package db
 
 type Slice struct {
-	contents []byte
+	Contents []byte
 }
 
 var emptySlice = Slice{}
@@ -11,13 +11,13 @@ func NilSlice() Slice {
 }
 
 func NewSlice(contents []byte) Slice {
-	return Slice{contents: contents}
+	return Slice{Contents: contents}
 }
 
 func (slice Slice) GetRawContent() []byte {
-	return slice.contents
+	return slice.Contents
 }
 
 func (slice Slice) AsString() string {
-	return string(slice.contents)
+	return string(slice.Contents)
 }
