@@ -31,9 +31,9 @@ func (store *Store) ReadAt(offset int64) (PersistentSlice, PersistentSlice, erro
 	if err != nil {
 		return NilPersistentSlice(), NilPersistentSlice(), err
 	}
-	actualTotalSize := ActualTotalSize(bytes) - uint32(ReservedTotalSize)
+	sizeToRead := ActualTotalSize(bytes) - uint32(ReservedTotalSize)
+	contents := make([]byte, sizeToRead)
 
-	contents := make([]byte, actualTotalSize)
 	_, err = store.file.ReadAt(contents, offset+int64(ReservedTotalSize))
 	if err != nil {
 		return NilPersistentSlice(), NilPersistentSlice(), err
