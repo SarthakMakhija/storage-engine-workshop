@@ -38,6 +38,10 @@ func (persistentSlice PersistentSlice) GetSlice() db.Slice {
 	return db.NewSlice(persistentSlice.GetPersistentContents())
 }
 
+func (persistentSlice PersistentSlice) Size() int {
+	return len(persistentSlice.Contents)
+}
+
 func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
