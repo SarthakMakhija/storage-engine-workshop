@@ -29,7 +29,9 @@ func (store *Store) Append(persistentSlice PersistentSlice) error {
 		return nil
 	}
 	availableCapacityInPage := func() int64 {
-		return int64(store.pageSize) - store.currentOffset
+		currentPage := store.currentOffset / int64(store.pageSize)
+		currentPageBeginOffset := currentPage * int64(store.pageSize)
+		return int64(store.pageSize) - (store.currentOffset - currentPageBeginOffset)
 	}
 	newOffset := func() int64 {
 		currentPage := store.currentOffset / int64(store.pageSize)
