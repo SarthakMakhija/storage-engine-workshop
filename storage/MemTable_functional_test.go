@@ -22,11 +22,11 @@ func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 	}
 
 	for count := 1; count <= 500; count++ {
-		storedValue, _ := memTable.Get(keyUsing(count))
+		getResult := memTable.Get(keyUsing(count))
 		expectedValue := valueUsing(count)
 
-		if storedValue.AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected %v, received %v", expectedValue.AsString(), storedValue.AsString())
+		if getResult.Value.AsString() != expectedValue.AsString() {
+			t.Fatalf("Expected %v, received %v", expectedValue.AsString(), getResult.Value.AsString())
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"sort"
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
 	"storage-engine-workshop/utils"
@@ -45,7 +46,33 @@ func (node *Node) Put(key db.Slice, value db.Slice, keyComparator comparator.Key
 	return false
 }
 
-func (node *Node) Get(key db.Slice, keyComparator comparator.KeyComparator) (db.Slice, bool) {
+func (node *Node) Get(key db.Slice, keyComparator comparator.KeyComparator) *db.GetResult {
+	node, ok := node.nodeMatching(key, keyComparator)
+	if ok {
+		return &db.GetResult{Value: node.value, Exists: ok}
+	}
+	return &db.GetResult{Value: db.NilSlice(), Exists: false}
+}
+
+func (node *Node) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparator) *db.MultiGetResult {
+	sort.SliceStable(keys, func(i, j int) bool {
+		return keyComparator.Compare(keys[i], keys[j]) < 0
+	})
+	currentNode := node
+	response := &db.MultiGetResult{}
+	for _, key := range keys {
+		targetNode, ok := currentNode.nodeMatching(key, keyComparator)
+		if ok {
+			response.Add(&db.GetResult{Value: targetNode.value, Exists: ok})
+			currentNode = targetNode
+		} else {
+			response.Add(&db.GetResult{Value: db.NilSlice(), Exists: false})
+		}
+	}
+	return response
+}
+
+func (node *Node) nodeMatching(key db.Slice, keyComparator comparator.KeyComparator) (*Node, bool) {
 	current := node
 	for level := len(node.forwards) - 1; level >= 0; level-- {
 		for current.forwards[level] != nil &&
@@ -55,7 +82,7 @@ func (node *Node) Get(key db.Slice, keyComparator comparator.KeyComparator) (db.
 	}
 	current = current.forwards[0]
 	if current != nil && keyComparator.Compare(current.key, key) == 0 {
-		return current.value, true
+		return current, true
 	}
-	return db.NilSlice(), false
+	return nil, false
 }

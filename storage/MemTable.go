@@ -24,6 +24,10 @@ func (memTable *MemTable) Put(key, value db.Slice) bool {
 	return memTable.head.Put(key, value, memTable.keyComparator, memTable.levelGenerator)
 }
 
-func (memTable *MemTable) Get(key db.Slice) (db.Slice, bool) {
+func (memTable *MemTable) Get(key db.Slice) *db.GetResult {
 	return memTable.head.Get(key, memTable.keyComparator)
+}
+
+func (memTable *MemTable) MultiGet(keys []db.Slice) *db.MultiGetResult {
+	return memTable.head.MultiGet(keys, memTable.keyComparator)
 }

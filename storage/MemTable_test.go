@@ -14,9 +14,9 @@ func TestPutAKeyValueAndGetByKeyInMemTable(t *testing.T) {
 
 	memTable.Put(key, value)
 
-	storedValue, _ := memTable.Get(key)
-	if storedValue.AsString() != "Hard disk" {
-		t.Fatalf("Expected %v, received %v", "Hard disk", storedValue.AsString())
+	getResult := memTable.Get(key)
+	if getResult.Value.AsString() != "Hard disk" {
+		t.Fatalf("Expected %v, received %v", "Hard disk", getResult.Value.AsString())
 	}
 }
 
@@ -28,8 +28,35 @@ func TestPutAKeyValueAndAssertsItsExistenceInMemTable(t *testing.T) {
 
 	memTable.Put(key, value)
 
-	_, ok := memTable.Get(key)
-	if ok != true {
+	getResult := memTable.Get(key)
+	if getResult.Exists != true {
 		t.Fatalf("Expected key to exist, but it did not. Key was %v", "HDD")
+	}
+}
+
+func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
+	memTable := NewMemTable(10, comparator.StringKeyComparator{})
+
+	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
+	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
+
+	keys := []db.Slice{
+		db.NewSlice([]byte("HDD")),
+		db.NewSlice([]byte("SDD")),
+		db.NewSlice([]byte("PMEM")),
+	}
+	multiGetResult := memTable.MultiGet(keys)
+	allGetResults := multiGetResult.Values
+
+	expected := []db.GetResult{
+		{Value: db.NewSlice([]byte("Hard disk")), Exists: true},
+		{Value: db.NilSlice(), Exists: false},
+		{Value: db.NewSlice([]byte("Solid state")), Exists: true},
+	}
+
+	for index, e := range expected {
+		if e.Value.AsString() != allGetResults[index].Value.AsString() {
+			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
+		}
 	}
 }
