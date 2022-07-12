@@ -10,8 +10,8 @@ This repository is supposed to contain the following:
 4. Implementation of write-ahead logging
 5. Implementation of transactions
 6. Implementation of Bloom filter
-7. Implementation of "Put", "Get" and "Update"
-8. Implementation of "Get" in Memtable and SSTable
+7. Implementation of "Put", "Get", "MultiGet" and "Update"
+8. Implementation of "Get" and "MultiGet" in Memtable and SSTable
 9. Implementation of "Update" using versioned put
 
 # Build Status
