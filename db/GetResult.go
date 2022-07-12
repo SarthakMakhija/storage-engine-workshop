@@ -6,9 +6,9 @@ type GetResult struct {
 }
 
 type MultiGetResult struct {
-	Values []*GetResult
+	Values []GetResult
 }
 
-func (multiGetResult *MultiGetResult) Add(getResult *GetResult) {
+func (multiGetResult *MultiGetResult) Add(getResult GetResult) {
 	multiGetResult.Values = append(multiGetResult.Values, getResult)
 }
