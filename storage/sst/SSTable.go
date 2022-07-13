@@ -40,8 +40,10 @@ func (ssTable *SSTable) Write() error {
 	if bytesWritten < ssTable.persistentSlice.Size() {
 		return errors.New(fmt.Sprintf("%v bytes written to SSTable, where as total bytes that should have been written are %v", bytesWritten, ssTable.persistentSlice.Size()))
 	}
-	err = ssTable.file.Close()
-	if err != nil {
+	if err := ssTable.file.Sync(); err != nil {
+		return errors.New("error while syncing the ssTable file " + ssTable.file.Name())
+	}
+	if err := ssTable.file.Close(); err != nil {
 		log.Default().Println("error while closing the ssTable file " + ssTable.file.Name())
 	}
 	return nil
