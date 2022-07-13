@@ -23,7 +23,7 @@ func NewSSTableFrom(memTable *MemTable, directory string) (*SSTable, error) {
 	}, nil
 }
 
-func (ssTable *SSTable) Dump() error {
+func (ssTable *SSTable) Write() error {
 	bytesWritten, err := ssTable.file.WriteAt(ssTable.persistentSlice.GetPersistentContents(), 0)
 	if err != nil {
 		return err

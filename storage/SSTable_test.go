@@ -17,7 +17,7 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestDumpsSSTableFromMemTable(t *testing.T) {
+func TestWritesSSTableToDisk(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
 	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
 
@@ -25,7 +25,7 @@ func TestDumpsSSTableFromMemTable(t *testing.T) {
 	defer os.RemoveAll(directory)
 
 	ssTable, _ := NewSSTableFrom(memTable, directory)
-	if err := ssTable.Dump(); err != nil {
+	if err := ssTable.Write(); err != nil {
 		t.Fatalf("Expected no errors while dump sstable file but received an error: %v", err)
 	}
 }
