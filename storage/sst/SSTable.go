@@ -37,6 +37,9 @@ func (ssTable *SSTable) Write() error {
 	if bytesWritten <= 0 {
 		return errors.New(fmt.Sprintf("%v bytes written to SSTable, could not dump persistent slice to SSTable", bytesWritten))
 	}
+	if bytesWritten < ssTable.persistentSlice.Size() {
+		return errors.New(fmt.Sprintf("%v bytes written to SSTable, where as total bytes that should have been written are %v", bytesWritten, ssTable.persistentSlice.Size()))
+	}
 	err = ssTable.file.Close()
 	if err != nil {
 		log.Default().Println("error while closing the ssTable file " + ssTable.file.Name())
