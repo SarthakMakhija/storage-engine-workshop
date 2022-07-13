@@ -1,8 +1,8 @@
 package memory
 
 import (
-	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/comparator"
 	"testing"
 )
 

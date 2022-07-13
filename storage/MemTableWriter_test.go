@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/memory"
 	"testing"
 )

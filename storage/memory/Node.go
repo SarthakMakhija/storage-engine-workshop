@@ -2,8 +2,8 @@ package memory
 
 import (
 	"sort"
-	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/utils"
 )
 
