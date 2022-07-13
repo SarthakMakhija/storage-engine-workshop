@@ -5,28 +5,30 @@
 3. Basic implementation of WAL without segments
    done
 4. Allow page aligned writes in WAL without segments
-   done
+   NA
 5. Implement page aligned reads in WAL
+   NA
+6. Implement flushing in WAL
    pending
-6. Implement segments in WAL
+7. Implement segments in WAL
    pending
-7. Implement marker in WAL
+8. Implement marker in WAL
    pending
-8. Implement SSTable
+9. Implement SSTable
    pending
-9. Convert memtable to SSTable when the size of memtable has reached its limit
+10. Convert memtable to SSTable when the size of memtable has reached its limit
    pending
-10. Implement Bloom filter
+11. Implement Bloom filter
    pending
-11. Implement end to end put and get the involves - memtable/bloom filter and SSTable
+12. Implement end to end put and get the involves - memtable/bloom filter and SSTable
    pending
-12. Implement transactions
+13. Implement transactions
    pending
-13. Implement concurrency
+14. Implement concurrency
    pending
-14. Implement update using versioned put
+15. Implement update using versioned put
    pending
-15. Write benchmarks
+16. Write benchmarks
    pending
 
 Questions
