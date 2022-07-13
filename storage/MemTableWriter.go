@@ -29,16 +29,16 @@ func NewMemTableWriter(memTable *memory.MemTable, directory string) MemTableWrit
 
 func (memTableWriter MemTableWriter) Write() <-chan MemTableWriteStatus {
 	response := make(chan MemTableWriteStatus)
-	writeErrorToChannel := func(err error) {
-		response <- MemTableWriteStatus{status: FAILURE, err: err}
-		close(response)
-	}
-	writeSuccessToChannel := func() {
-		response <- MemTableWriteStatus{status: SUCCESS}
-		close(response)
-	}
 
 	go func() {
+		writeErrorToChannel := func(err error) {
+			response <- MemTableWriteStatus{status: FAILURE, err: err}
+			close(response)
+		}
+		writeSuccessToChannel := func() {
+			response <- MemTableWriteStatus{status: SUCCESS}
+			close(response)
+		}
 		ssTable, err := sst.NewSSTableFrom(memTableWriter.memTable, memTableWriter.directory)
 		if err != nil {
 			writeErrorToChannel(err)
