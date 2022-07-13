@@ -4,6 +4,7 @@ import (
 	"sort"
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/log"
 	"storage-engine-workshop/utils"
 )
 
@@ -70,6 +71,19 @@ func (node *Node) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparat
 		}
 	}
 	return response
+}
+
+func (node *Node) AggregatedPersistentSlice() log.PersistentSlice {
+	level, current := 0, node
+	current = current.forwards[level]
+
+	persistentSlice := log.PersistentSlice{Contents: []byte{}}
+	for current != nil {
+		slice := log.NewPersistentSlice(db.KeyValuePair{Key: current.key, Value: current.value})
+		persistentSlice.Add(slice)
+		current = current.forwards[level]
+	}
+	return persistentSlice
 }
 
 func (node *Node) nodeMatching(key db.Slice, keyComparator comparator.KeyComparator) (*Node, bool) {

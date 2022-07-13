@@ -22,8 +22,8 @@ func NilPersistentSlice() PersistentSlice {
 	return emptySlice
 }
 
-func NewPersistentSlice(putCommand PutCommand) PersistentSlice {
-	return marshal(putCommand)
+func NewPersistentSlice(keyValuePair db.KeyValuePair) PersistentSlice {
+	return marshal(keyValuePair)
 }
 
 func NewPersistentSliceKeyValuePair(contents []byte) (PersistentSlice, PersistentSlice) {
@@ -42,15 +42,19 @@ func (persistentSlice PersistentSlice) Size() int {
 	return len(persistentSlice.Contents)
 }
 
+func (persistentSlice *PersistentSlice) Add(other PersistentSlice) {
+	persistentSlice.Contents = append(persistentSlice.Contents, other.Contents...)
+}
+
 func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
-func marshal(putCommand PutCommand) PersistentSlice {
+func marshal(keyValuePair db.KeyValuePair) PersistentSlice {
 	reservedTotalSize, reservedKeySize := ReservedTotalSize, ReservedKeySize
 	actualTotalSize :=
-		len(putCommand.key.GetRawContent()) +
-			len(putCommand.value.GetRawContent()) +
+		len(keyValuePair.Key.GetRawContent()) +
+			len(keyValuePair.Value.GetRawContent()) +
 			int(reservedKeySize) +
 			int(reservedTotalSize)
 
@@ -61,17 +65,18 @@ func marshal(putCommand PutCommand) PersistentSlice {
 	bigEndian.PutUint32(bytes, uint32(actualTotalSize))
 	offset = offset + int(reservedTotalSize)
 
-	bigEndian.PutUint32(bytes[offset:], uint32(len(putCommand.key.GetRawContent())))
+	bigEndian.PutUint32(bytes[offset:], uint32(len(keyValuePair.Key.GetRawContent())))
 	offset = offset + int(reservedKeySize)
 
-	copy(bytes[offset:], putCommand.key.GetRawContent())
-	offset = offset + len(putCommand.key.GetRawContent())
+	copy(bytes[offset:], keyValuePair.Key.GetRawContent())
+	offset = offset + len(keyValuePair.Key.GetRawContent())
 
-	copy(bytes[offset:], putCommand.value.GetRawContent())
+	copy(bytes[offset:], keyValuePair.Value.GetRawContent())
 	return PersistentSlice{Contents: bytes}
 }
 
 func unmarshal(bytes []byte) (PersistentSlice, PersistentSlice) {
+	bytes = bytes[ReservedTotalSize:]
 	keySize := bigEndian.Uint32(bytes)
 	keyEndOffset := uint32(ReservedKeySize) + keySize
 

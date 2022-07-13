@@ -3,6 +3,7 @@ package storage
 import (
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/log"
 	"testing"
 )
 
@@ -58,5 +59,23 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 		if e.Value.AsString() != allGetResults[index].Value.AsString() {
 			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
 		}
+	}
+}
+
+func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
+	memTable := NewMemTable(10, comparator.StringKeyComparator{})
+
+	key := db.NewSlice([]byte("HDD"))
+	value := db.NewSlice([]byte("Hard disk"))
+
+	memTable.Put(key, value)
+	persistentSlice := memTable.AggregatedPersistentSlice()
+
+	persistentKey, persistentValue := log.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
+	if persistentKey.GetSlice().AsString() != key.AsString() {
+		t.Fatalf("Expected key to be %v from persistent slice but received %v", key.AsString(), persistentKey.GetSlice().AsString())
+	}
+	if persistentValue.GetSlice().AsString() != value.AsString() {
+		t.Fatalf("Expected value to be %v from persistent slice but received %v", value.AsString(), persistentValue.GetSlice().AsString())
 	}
 }
