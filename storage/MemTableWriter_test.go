@@ -27,7 +27,7 @@ func TestMemTableWriterWithSuccessAsStatus(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	memTableWriter := NewMemTableWriter(memTable, directory)
+	memTableWriter, _ := NewMemTableWriter(memTable, directory)
 	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 
@@ -42,7 +42,7 @@ func TestMemTableWriterWithFailureAsStatus(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	memTableWriter := NewMemTableWriter(emptyMemTable, directory)
+	memTableWriter, _ := NewMemTableWriter(emptyMemTable, directory)
 	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 
