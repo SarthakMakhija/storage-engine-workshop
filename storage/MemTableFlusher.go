@@ -1,5 +1,10 @@
 package storage
 
+import (
+	"storage-engine-workshop/storage/memory"
+	"storage-engine-workshop/storage/sst"
+)
+
 const (
 	FAILURE int = iota
 	SUCCESS
@@ -11,11 +16,11 @@ type MemTableFlushStatus struct {
 }
 
 type MemTableFlusher struct {
-	memTable  *MemTable
+	memTable  *memory.MemTable
 	directory string
 }
 
-func NewMemTableFlusher(memTable *MemTable, directory string) MemTableFlusher {
+func NewMemTableFlusher(memTable *memory.MemTable, directory string) MemTableFlusher {
 	return MemTableFlusher{
 		memTable:  memTable,
 		directory: directory,
@@ -34,7 +39,7 @@ func (memTableFlusher MemTableFlusher) Flush() <-chan MemTableFlushStatus {
 	}
 
 	go func() {
-		ssTable, err := NewSSTableFrom(memTableFlusher.memTable, memTableFlusher.directory)
+		ssTable, err := sst.NewSSTableFrom(memTableFlusher.memTable, memTableFlusher.directory)
 		if err != nil {
 			writeErrorToChannel(err)
 			return

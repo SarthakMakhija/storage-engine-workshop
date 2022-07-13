@@ -1,14 +1,25 @@
 package storage
 
 import (
+	"io/ioutil"
+	"log"
 	"os"
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/memory"
 	"testing"
 )
 
+func tempDirectory() string {
+	dir, err := ioutil.TempDir(".", "sst")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
+}
+
 func TestMemTableFlusherWithSuccessAsStatus(t *testing.T) {
-	memTable := NewMemTable(10, comparator.StringKeyComparator{})
+	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
@@ -28,7 +39,7 @@ func TestMemTableFlusherWithSuccessAsStatus(t *testing.T) {
 }
 
 func TestMemTableFlusherWithFailureAsStatus(t *testing.T) {
-	emptyMemTable := NewMemTable(10, comparator.StringKeyComparator{})
+	emptyMemTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)

@@ -1,4 +1,4 @@
-package storage
+package sst
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/memory"
 )
 
 type SSTable struct {
@@ -15,7 +16,7 @@ type SSTable struct {
 	persistentSlice db.PersistentSlice
 }
 
-func NewSSTableFrom(memTable *MemTable, directory string) (*SSTable, error) {
+func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, error) {
 	filePath := path.Join(directory, "1.sst")
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {

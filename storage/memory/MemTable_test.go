@@ -1,4 +1,4 @@
-package storage
+package memory
 
 import (
 	"storage-engine-workshop/comparator"
