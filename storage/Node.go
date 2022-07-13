@@ -76,7 +76,7 @@ func (node *Node) AggregatePersistentSlice() db.PersistentSlice {
 	level, current := 0, node
 	current = current.forwards[level]
 
-	persistentSlice := db.PersistentSlice{Contents: []byte{}}
+	persistentSlice := db.EmptyPersistentSlice()
 	for current != nil {
 		slice := db.NewPersistentSlice(db.KeyValuePair{Key: current.key, Value: current.value})
 		persistentSlice.Add(slice)

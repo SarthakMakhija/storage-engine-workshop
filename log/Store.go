@@ -50,14 +50,14 @@ func (store *Store) ReadAt(offset int64) (db.PersistentSlice, db.PersistentSlice
 	bytes := make([]byte, int(db.ReservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
 	if err != nil {
-		return db.NilPersistentSlice(), db.NilPersistentSlice(), err
+		return db.EmptyPersistentSlice(), db.EmptyPersistentSlice(), err
 	}
 	sizeToRead := db.ActualTotalSize(bytes)
 	contents := make([]byte, sizeToRead)
 
 	_, err = store.file.ReadAt(contents, offset)
 	if err != nil {
-		return db.NilPersistentSlice(), db.NilPersistentSlice(), err
+		return db.EmptyPersistentSlice(), db.EmptyPersistentSlice(), err
 	}
 	key, value := db.NewPersistentSliceKeyValuePair(contents)
 	return key, value, nil

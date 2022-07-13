@@ -12,12 +12,12 @@ var (
 )
 
 type PersistentSlice struct {
-	Contents []byte
+	contents []byte
 }
 
-var emptyPersistentSlice = PersistentSlice{}
+var emptyPersistentSlice = PersistentSlice{contents: []byte{}}
 
-func NilPersistentSlice() PersistentSlice {
+func EmptyPersistentSlice() PersistentSlice {
 	return emptyPersistentSlice
 }
 
@@ -30,7 +30,7 @@ func NewPersistentSliceKeyValuePair(contents []byte) (PersistentSlice, Persisten
 }
 
 func (persistentSlice PersistentSlice) GetPersistentContents() []byte {
-	return persistentSlice.Contents
+	return persistentSlice.contents
 }
 
 func (persistentSlice PersistentSlice) GetSlice() Slice {
@@ -38,11 +38,11 @@ func (persistentSlice PersistentSlice) GetSlice() Slice {
 }
 
 func (persistentSlice PersistentSlice) Size() int {
-	return len(persistentSlice.Contents)
+	return len(persistentSlice.contents)
 }
 
 func (persistentSlice *PersistentSlice) Add(other PersistentSlice) {
-	persistentSlice.Contents = append(persistentSlice.Contents, other.Contents...)
+	persistentSlice.contents = append(persistentSlice.contents, other.contents...)
 }
 
 func ActualTotalSize(bytes []byte) uint32 {
@@ -71,7 +71,7 @@ func marshal(keyValuePair KeyValuePair) PersistentSlice {
 	offset = offset + len(keyValuePair.Key.GetRawContent())
 
 	copy(bytes[offset:], keyValuePair.Value.GetRawContent())
-	return PersistentSlice{Contents: bytes}
+	return PersistentSlice{contents: bytes}
 }
 
 func unmarshal(bytes []byte) (PersistentSlice, PersistentSlice) {
@@ -79,5 +79,5 @@ func unmarshal(bytes []byte) (PersistentSlice, PersistentSlice) {
 	keySize := bigEndian.Uint32(bytes)
 	keyEndOffset := uint32(ReservedKeySize) + keySize
 
-	return PersistentSlice{Contents: bytes[ReservedKeySize:keyEndOffset]}, PersistentSlice{Contents: bytes[keyEndOffset:]}
+	return PersistentSlice{contents: bytes[ReservedKeySize:keyEndOffset]}, PersistentSlice{contents: bytes[keyEndOffset:]}
 }
