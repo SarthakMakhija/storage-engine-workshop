@@ -14,11 +14,13 @@
    pending
 8. Implement marker in WAL
    pending
-9. Implement SSTable
-   pending
+9. Implement SSTable (convert MemTable to SSTable)
+   done
 10. Convert memtable to SSTable when the size of memtable has reached its limit
    pending
-11. Implement Bloom filter
+11. Implement in-memory bloom filter
+   pending
+12. Implement persistent bloom filter
    pending
 12. Implement end to end put and get the involves - memtable/bloom filter and SSTable
    pending
