@@ -32,6 +32,9 @@
    pending
 
 Questions
-1. Do we need page aligned writes?
-2. Instead, can we implement page aligned reads?
-3. What if the size of persistent slice is more than page size?
+1. Do we need page aligned writes for WAL?
+No
+2. Instead, can we implement page aligned reads for WAL?
+Not needed
+3. What if the size of persistent slice is more than page size in WAL?
+NA
