@@ -7,8 +7,8 @@ type WAL struct {
 	store     *Store
 }
 
-func NewLog(directory string, pageSize int) (*WAL, error) {
-	store, err := NewStore(directory, pageSize)
+func NewLog(directory string) (*WAL, error) {
+	store, err := NewStore(directory)
 	if err != nil {
 		return nil, err
 	}
