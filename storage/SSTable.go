@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -33,7 +34,7 @@ func (ssTable *SSTable) Write() error {
 		return err
 	}
 	if bytesWritten <= 0 {
-		return errors.New("could not dump persistent slice to SSTable")
+		return errors.New(fmt.Sprintf("%v bytes written to SSTable, could not dump persistent slice to SSTable", bytesWritten))
 	}
 	err = ssTable.file.Close()
 	if err != nil {
