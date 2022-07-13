@@ -16,6 +16,7 @@ type MemTable struct {
 func NewMemTable(maxLevel int, keyComparator comparator.KeyComparator) *MemTable {
 	return &MemTable{
 		head:           NewNode(db.NilSlice(), db.NilSlice(), maxLevel),
+		size:           0,
 		keyComparator:  keyComparator,
 		levelGenerator: utils.NewLevelGenerator(maxLevel),
 	}
