@@ -10,36 +10,36 @@ const (
 	SUCCESS
 )
 
-type MemTableFlushStatus struct {
+type MemTableWriteStatus struct {
 	status int
 	err    error
 }
 
-type MemTableFlusher struct {
+type MemTableWriter struct {
 	memTable  *memory.MemTable
 	directory string
 }
 
-func NewMemTableFlusher(memTable *memory.MemTable, directory string) MemTableFlusher {
-	return MemTableFlusher{
+func NewMemTableWriter(memTable *memory.MemTable, directory string) MemTableWriter {
+	return MemTableWriter{
 		memTable:  memTable,
 		directory: directory,
 	}
 }
 
-func (memTableFlusher MemTableFlusher) Flush() <-chan MemTableFlushStatus {
-	response := make(chan MemTableFlushStatus)
+func (memTableWriter MemTableWriter) Write() <-chan MemTableWriteStatus {
+	response := make(chan MemTableWriteStatus)
 	writeErrorToChannel := func(err error) {
-		response <- MemTableFlushStatus{status: FAILURE, err: err}
+		response <- MemTableWriteStatus{status: FAILURE, err: err}
 		close(response)
 	}
 	writeSuccessToChannel := func() {
-		response <- MemTableFlushStatus{status: SUCCESS}
+		response <- MemTableWriteStatus{status: SUCCESS}
 		close(response)
 	}
 
 	go func() {
-		ssTable, err := sst.NewSSTableFrom(memTableFlusher.memTable, memTableFlusher.directory)
+		ssTable, err := sst.NewSSTableFrom(memTableWriter.memTable, memTableWriter.directory)
 		if err != nil {
 			writeErrorToChannel(err)
 			return

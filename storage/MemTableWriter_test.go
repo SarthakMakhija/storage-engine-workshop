@@ -18,7 +18,7 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestMemTableFlusherWithSuccessAsStatus(t *testing.T) {
+func TestMemTableWriterWithSuccessAsStatus(t *testing.T) {
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 
 	key := db.NewSlice([]byte("HDD"))
@@ -29,8 +29,8 @@ func TestMemTableFlusherWithSuccessAsStatus(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	memTableFlusher := NewMemTableFlusher(memTable, directory)
-	statusChannel := memTableFlusher.Flush()
+	memTableWriter := NewMemTableWriter(memTable, directory)
+	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 
 	if status.status != SUCCESS {
@@ -38,14 +38,14 @@ func TestMemTableFlusherWithSuccessAsStatus(t *testing.T) {
 	}
 }
 
-func TestMemTableFlusherWithFailureAsStatus(t *testing.T) {
+func TestMemTableWriterWithFailureAsStatus(t *testing.T) {
 	emptyMemTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	memTableFlusher := NewMemTableFlusher(emptyMemTable, directory)
-	statusChannel := memTableFlusher.Flush()
+	memTableWriter := NewMemTableWriter(emptyMemTable, directory)
+	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 
 	if status.status != FAILURE {
