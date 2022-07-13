@@ -3,7 +3,6 @@ package storage
 import (
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
-	"storage-engine-workshop/log"
 	"testing"
 )
 
@@ -71,7 +70,7 @@ func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	memTable.Put(key, value)
 	persistentSlice := memTable.AggregatedPersistentSlice()
 
-	persistentKey, persistentValue := log.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
+	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
 	if persistentKey.GetSlice().AsString() != key.AsString() {
 		t.Fatalf("Expected key to be %v from persistent slice but received %v", key.AsString(), persistentKey.GetSlice().AsString())
 	}

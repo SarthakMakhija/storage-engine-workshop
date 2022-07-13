@@ -3,6 +3,7 @@ package log
 import (
 	"os"
 	"path"
+	"storage-engine-workshop/db"
 )
 
 type Store struct {
@@ -19,7 +20,7 @@ func NewStore(directory string, pageSize int) (*Store, error) {
 	return &Store{file: storeFile, currentOffset: 0, pageSize: pageSize}, nil
 }
 
-func (store *Store) Append(persistentSlice PersistentSlice) error {
+func (store *Store) Append(persistentSlice db.PersistentSlice) error {
 	writeAt := func(offset int64) error {
 		bytesWritten, err := store.file.WriteAt(persistentSlice.GetPersistentContents(), offset)
 		if err != nil {
@@ -45,19 +46,19 @@ func (store *Store) Append(persistentSlice PersistentSlice) error {
 	return writeAt(newOffset())
 }
 
-func (store *Store) ReadAt(offset int64) (PersistentSlice, PersistentSlice, error) {
-	bytes := make([]byte, int(ReservedTotalSize))
+func (store *Store) ReadAt(offset int64) (db.PersistentSlice, db.PersistentSlice, error) {
+	bytes := make([]byte, int(db.ReservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
 	if err != nil {
-		return NilPersistentSlice(), NilPersistentSlice(), err
+		return db.NilPersistentSlice(), db.NilPersistentSlice(), err
 	}
-	sizeToRead := ActualTotalSize(bytes)
+	sizeToRead := db.ActualTotalSize(bytes)
 	contents := make([]byte, sizeToRead)
 
 	_, err = store.file.ReadAt(contents, offset)
 	if err != nil {
-		return NilPersistentSlice(), NilPersistentSlice(), err
+		return db.NilPersistentSlice(), db.NilPersistentSlice(), err
 	}
-	key, value := NewPersistentSliceKeyValuePair(contents)
+	key, value := db.NewPersistentSliceKeyValuePair(contents)
 	return key, value, nil
 }

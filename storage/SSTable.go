@@ -4,12 +4,12 @@ import (
 	"errors"
 	"os"
 	"path"
-	"storage-engine-workshop/log"
+	"storage-engine-workshop/db"
 )
 
 type SSTable struct {
 	file            *os.File
-	persistentSlice log.PersistentSlice
+	persistentSlice db.PersistentSlice
 }
 
 func NewSSTableFrom(memTable *MemTable, directory string) (*SSTable, error) {

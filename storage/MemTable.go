@@ -3,7 +3,6 @@ package storage
 import (
 	"storage-engine-workshop/comparator"
 	"storage-engine-workshop/db"
-	"storage-engine-workshop/log"
 	"storage-engine-workshop/utils"
 )
 
@@ -33,6 +32,6 @@ func (memTable *MemTable) MultiGet(keys []db.Slice) db.MultiGetResult {
 	return memTable.head.MultiGet(keys, memTable.keyComparator)
 }
 
-func (memTable *MemTable) AggregatedPersistentSlice() log.PersistentSlice {
+func (memTable *MemTable) AggregatedPersistentSlice() db.PersistentSlice {
 	return memTable.head.AggregatedPersistentSlice()
 }

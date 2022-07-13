@@ -1,8 +1,7 @@
-package log
+package db
 
 import (
 	"encoding/binary"
-	"storage-engine-workshop/db"
 	"unsafe"
 )
 
@@ -16,13 +15,13 @@ type PersistentSlice struct {
 	Contents []byte
 }
 
-var emptySlice = PersistentSlice{}
+var emptyPersistentSlice = PersistentSlice{}
 
 func NilPersistentSlice() PersistentSlice {
-	return emptySlice
+	return emptyPersistentSlice
 }
 
-func NewPersistentSlice(keyValuePair db.KeyValuePair) PersistentSlice {
+func NewPersistentSlice(keyValuePair KeyValuePair) PersistentSlice {
 	return marshal(keyValuePair)
 }
 
@@ -34,8 +33,8 @@ func (persistentSlice PersistentSlice) GetPersistentContents() []byte {
 	return persistentSlice.Contents
 }
 
-func (persistentSlice PersistentSlice) GetSlice() db.Slice {
-	return db.NewSlice(persistentSlice.GetPersistentContents())
+func (persistentSlice PersistentSlice) GetSlice() Slice {
+	return NewSlice(persistentSlice.GetPersistentContents())
 }
 
 func (persistentSlice PersistentSlice) Size() int {
@@ -50,7 +49,7 @@ func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
-func marshal(keyValuePair db.KeyValuePair) PersistentSlice {
+func marshal(keyValuePair KeyValuePair) PersistentSlice {
 	reservedTotalSize, reservedKeySize := ReservedTotalSize, ReservedKeySize
 	actualTotalSize :=
 		len(keyValuePair.Key.GetRawContent()) +
