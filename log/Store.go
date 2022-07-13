@@ -2,6 +2,7 @@ package log
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"storage-engine-workshop/db"
@@ -26,6 +27,9 @@ func (store *Store) Append(persistentSlice db.PersistentSlice) error {
 	}
 	if bytesWritten <= 0 {
 		return errors.New("could not append persistentSlice to WAL")
+	}
+	if bytesWritten < persistentSlice.Size() {
+		return errors.New(fmt.Sprintf("%v bytes written to WAL, where as total bytes that should have been written are %v", bytesWritten, persistentSlice.Size()))
 	}
 	return nil
 }
