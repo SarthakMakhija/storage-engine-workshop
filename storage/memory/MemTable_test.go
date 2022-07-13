@@ -8,10 +8,8 @@ import (
 
 func TestPutAKeyValueAndGetByKeyInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
-
 	memTable.Put(key, value)
 
 	getResult := memTable.Get(key)
@@ -22,10 +20,8 @@ func TestPutAKeyValueAndGetByKeyInMemTable(t *testing.T) {
 
 func TestPutAKeyValueAndAssertsItsExistenceInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
-
 	memTable.Put(key, value)
 
 	getResult := memTable.Get(key)
@@ -36,7 +32,6 @@ func TestPutAKeyValueAndAssertsItsExistenceInMemTable(t *testing.T) {
 
 func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-
 	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
 	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
 
@@ -63,11 +58,10 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 
 func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
-
 	memTable.Put(key, value)
+
 	persistentSlice := memTable.AggregatePersistentSlice()
 
 	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
@@ -76,5 +70,19 @@ func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	}
 	if persistentValue.GetSlice().AsString() != value.AsString() {
 		t.Fatalf("Expected value to be %v from persistent slice but received %v", value.AsString(), persistentValue.GetSlice().AsString())
+	}
+}
+
+func TestReturnsTheTotalMemTableSize(t *testing.T) {
+	memTable := NewMemTable(10, comparator.StringKeyComparator{})
+	key := db.NewSlice([]byte("HDD"))
+	value := db.NewSlice([]byte("Hard disk"))
+	memTable.Put(key, value)
+
+	size := memTable.TotalSize()
+	expected := key.Size() + value.Size()
+
+	if size != uint32(expected) {
+		t.Fatalf("Expected total memtable size to be %v, received %v", expected, size)
 	}
 }

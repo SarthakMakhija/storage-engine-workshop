@@ -21,3 +21,7 @@ func (slice Slice) GetRawContent() []byte {
 func (slice Slice) AsString() string {
 	return string(slice.Contents)
 }
+
+func (slice Slice) Size() int {
+	return len(slice.Contents)
+}
