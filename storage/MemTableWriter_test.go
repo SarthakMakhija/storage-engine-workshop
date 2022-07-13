@@ -20,10 +20,8 @@ func tempDirectory() string {
 
 func TestMemTableWriterWithSuccessAsStatus(t *testing.T) {
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
-
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
-
 	memTable.Put(key, value)
 
 	directory := tempDirectory()
