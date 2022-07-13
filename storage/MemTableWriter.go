@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	FAILURE int = iota
-	SUCCESS
+	SUCCESS int = iota
+	FAILURE
 )
 
 type MemTableWriteStatus struct {
