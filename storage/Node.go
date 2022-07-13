@@ -72,7 +72,7 @@ func (node *Node) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparat
 	return response
 }
 
-func (node *Node) AggregatedPersistentSlice() db.PersistentSlice {
+func (node *Node) AggregatePersistentSlice() db.PersistentSlice {
 	level, current := 0, node
 	current = current.forwards[level]
 

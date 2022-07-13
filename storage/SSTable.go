@@ -19,7 +19,7 @@ func NewSSTableFrom(memTable *MemTable, directory string) (*SSTable, error) {
 	}
 	return &SSTable{
 		file:            file,
-		persistentSlice: memTable.AggregatedPersistentSlice(),
+		persistentSlice: memTable.AggregatePersistentSlice(),
 	}, nil
 }
 
