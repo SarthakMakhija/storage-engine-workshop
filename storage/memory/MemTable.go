@@ -3,7 +3,7 @@ package memory
 import (
 	"storage-engine-workshop/db"
 	"storage-engine-workshop/storage/comparator"
-	"storage-engine-workshop/utils"
+	"storage-engine-workshop/storage/utils"
 )
 
 type MemTable struct {
