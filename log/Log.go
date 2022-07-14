@@ -49,12 +49,10 @@ func (log *WAL) ReadAll() ([]PutCommand, error) {
 		return append(copiedPassiveSegments, log.activeSegment)
 	}
 	keyValuePairsToPutCommands := func(keyValuePairs []db.PersistentKeyValuePair) []PutCommand {
-		var putCommands []PutCommand
-		for _, pair := range keyValuePairs {
-			putCommands = append(
-				putCommands,
-				NewPutCommand(db.KeyValuePair{Key: pair.Key.GetSlice(), Value: pair.Value.GetSlice()}),
-			)
+		putCommands := make([]PutCommand, len(keyValuePairs))
+		for index, pair := range keyValuePairs {
+			putCommands[index] =
+				NewPutCommand(db.KeyValuePair{Key: pair.Key.GetSlice(), Value: pair.Value.GetSlice()})
 		}
 		return putCommands
 	}
