@@ -44,7 +44,7 @@ func (store *Store) ReadAll() ([]db.PersistentKeyValuePair, error) {
 	var keyValuePairs []db.PersistentKeyValuePair
 	var currentOffset int64 = 0
 
-	for currentOffset < int64(store.size) {
+	for currentOffset < store.size {
 		key, value, nextOffset, err := store.readAt(currentOffset)
 		if err != nil {
 			return nil, err
