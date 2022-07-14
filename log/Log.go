@@ -24,12 +24,7 @@ func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
 func (log *WAL) Append(putCommand PutCommand) error {
 	rollOverActiveSegment := func() error {
 		log.passiveSegments = append(log.passiveSegments, log.activeSegment)
-		if segment, err := NewSegment(log.directory, log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes); err != nil {
-			return err
-		} else {
-			log.activeSegment = segment
-		}
-		return nil
+		return log.openActiveSegmentAt(log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes)
 	}
 	appendToActiveSegment := func() error {
 		if err := log.activeSegment.Append(db.NewPersistentSlice(db.KeyValuePair{Key: putCommand.key, Value: putCommand.value})); err != nil {
@@ -83,12 +78,12 @@ func (log *WAL) Close() {
 
 func (log *WAL) init(segmentMaxSizeBytes uint64) error {
 	sortedSegmentOffsets := func() ([]int64, error) {
-		segmentFile, err := ioutil.ReadDir(log.directory)
+		segmentFiles, err := ioutil.ReadDir(log.directory)
 		if err != nil {
 			return nil, err
 		}
 		var baseOffsets []int64
-		for _, file := range segmentFile {
+		for _, file := range segmentFiles {
 			baseOffsets = append(baseOffsets, parseSegmentFileName(file))
 		}
 		sort.Slice(baseOffsets, func(i, j int) bool {
