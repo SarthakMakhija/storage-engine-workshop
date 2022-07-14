@@ -20,8 +20,8 @@
    pending
 11. Implement flushing in SSTable
    done
-12. Implement in-memory bloom filter
-   pending
+12. Implement a bloom filter without reference to SSTable
+   done
 13. Implement persistent bloom filter
    pending
 14. Implement end to end put and get the involves - memtable/bloom filter and SSTable
