@@ -11,7 +11,7 @@
 6. Implement flushing in WAL
    pending
 7. Implement segments in WAL
-   pending
+   done
 8. Implement marker in WAL
    pending
 9. Implement SSTable (convert MemTable to SSTable)
