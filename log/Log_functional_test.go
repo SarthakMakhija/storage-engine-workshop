@@ -31,7 +31,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 	var segmentMaxSizeBytes uint64 = 32
 	wal, _ := NewLog(directory, segmentMaxSizeBytes)
 	for count := 1; count <= 20; count++ {
-		putCommand := NewPutCommand(keyUsing(count), valueUsing(count))
+		putCommand := NewPutCommandWithKeyValue(keyUsing(count), valueUsing(count))
 		err := wal.Append(putCommand)
 		if err != nil {
 			log.Fatal(err)
@@ -48,11 +48,11 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 		expectedValue := valueUsing(count)
 		putCommand := putCommands[count-1]
 
-		if putCommand.key.AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key.AsString())
+		if putCommand.key().AsString() != expectedKey.AsString() {
+			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key().AsString())
 		}
-		if putCommand.value.AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value.AsString())
+		if putCommand.value().AsString() != expectedValue.AsString() {
+			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value().AsString())
 		}
 	}
 }
@@ -71,7 +71,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 	var segmentMaxSizeBytes uint64 = 32
 	originalWal, _ := NewLog(directory, segmentMaxSizeBytes)
 	for count := 1; count <= 20; count++ {
-		putCommand := NewPutCommand(keyUsing(count), valueUsing(count))
+		putCommand := NewPutCommandWithKeyValue(keyUsing(count), valueUsing(count))
 		err := originalWal.Append(putCommand)
 		if err != nil {
 			log.Fatal(err)
@@ -90,11 +90,11 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 		expectedValue := valueUsing(count)
 		putCommand := putCommands[count-1]
 
-		if putCommand.key.AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key.AsString())
+		if putCommand.key().AsString() != expectedKey.AsString() {
+			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key().AsString())
 		}
-		if putCommand.value.AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value.AsString())
+		if putCommand.value().AsString() != expectedValue.AsString() {
+			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value().AsString())
 		}
 	}
 }

@@ -5,13 +5,23 @@ import (
 )
 
 type PutCommand struct {
-	key   db.Slice
-	value db.Slice
+	keyValuePair db.KeyValuePair
 }
 
-func NewPutCommand(key, value db.Slice) PutCommand {
+func NewPutCommand(pair db.KeyValuePair) PutCommand {
 	return PutCommand{
-		key:   key,
-		value: value,
+		keyValuePair: pair,
 	}
+}
+
+func NewPutCommandWithKeyValue(key db.Slice, value db.Slice) PutCommand {
+	return NewPutCommand(db.KeyValuePair{Key: key, Value: value})
+}
+
+func (putCommand PutCommand) key() db.Slice {
+	return putCommand.keyValuePair.Key
+}
+
+func (putCommand PutCommand) value() db.Slice {
+	return putCommand.keyValuePair.Value
 }
