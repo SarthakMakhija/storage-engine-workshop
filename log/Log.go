@@ -21,7 +21,6 @@ func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
 
 func (log *WAL) Append(putCommand PutCommand) error {
 	rollOverActiveSegment := func() error {
-		//log.activeSegment.Close()
 		log.passiveSegments = append(log.passiveSegments, log.activeSegment)
 		if segment, err := NewSegment(log.directory, log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes); err != nil {
 			return err
