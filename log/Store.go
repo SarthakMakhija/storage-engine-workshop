@@ -51,6 +51,17 @@ func (store *Store) ReadAll() ([]db.PersistentKeyValuePair, error) {
 	return keyValuePairs, nil
 }
 
+func (store *Store) Size() uint64 {
+	return store.size
+}
+
+func (store *Store) Close() {
+	err := store.file.Close()
+	if err != nil {
+		log.Default().Println("Error while closing the file " + store.file.Name())
+	}
+}
+
 func (store *Store) readAt(offset int64) (db.PersistentSlice, db.PersistentSlice, int64, error) {
 	bytes := make([]byte, int(db.ReservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
@@ -66,15 +77,4 @@ func (store *Store) readAt(offset int64) (db.PersistentSlice, db.PersistentSlice
 	}
 	key, value := db.NewPersistentSliceKeyValuePair(contents)
 	return key, value, offset + int64(sizeToRead), nil
-}
-
-func (store *Store) Size() uint64 {
-	return store.size
-}
-
-func (store *Store) Close() {
-	err := store.file.Close()
-	if err != nil {
-		log.Default().Println("Error while closing the file " + store.file.Name())
-	}
 }
