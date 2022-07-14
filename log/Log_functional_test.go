@@ -17,7 +17,7 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestAppendsToWriteAheadLogAndReadsTheKey(t *testing.T) {
+func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
@@ -28,7 +28,8 @@ func TestAppendsToWriteAheadLogAndReadsTheKey(t *testing.T) {
 		return db.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 
-	wal, _ := NewLog(directory)
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := NewLog(directory, segmentMaxSizeBytes)
 	for count := 1; count <= 20; count++ {
 		putCommand := NewPutCommand(keyUsing(count), valueUsing(count))
 		err := wal.Append(putCommand)

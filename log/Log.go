@@ -11,8 +11,8 @@ type WAL struct {
 	passiveSegments []*Segment
 }
 
-func NewLog(directory string) (*WAL, error) {
-	segment, err := NewSegment(directory, 0, 32)
+func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
+	segment, err := NewSegment(directory, 0, segmentMaxSizeBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func (log *WAL) Append(putCommand PutCommand) error {
 	rollOverActiveSegment := func() error {
 		//log.activeSegment.Close()
 		log.passiveSegments = append(log.passiveSegments, log.activeSegment)
-		if segment, err := NewSegment(log.directory, log.activeSegment.LastOffset(), 32); err != nil {
+		if segment, err := NewSegment(log.directory, log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes); err != nil {
 			return err
 		} else {
 			log.activeSegment = segment
