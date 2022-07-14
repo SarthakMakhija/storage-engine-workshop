@@ -10,7 +10,7 @@ import (
 
 type Store struct {
 	file *os.File
-	size uint64
+	size int64
 }
 
 func NewStore(filePath string) (*Store, error) {
@@ -18,7 +18,11 @@ func NewStore(filePath string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{file: storeFile, size: 0}, nil
+	stat, err := storeFile.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return &Store{file: storeFile, size: stat.Size()}, nil
 }
 
 func (store *Store) Append(persistentSlice db.PersistentSlice) error {
@@ -32,7 +36,7 @@ func (store *Store) Append(persistentSlice db.PersistentSlice) error {
 	if bytesWritten < persistentSlice.Size() {
 		return errors.New(fmt.Sprintf("%v bytes written to WAL, where as total bytes that should have been written are %v", bytesWritten, persistentSlice.Size()))
 	}
-	store.size = store.size + uint64(bytesWritten)
+	store.size = store.size + int64(bytesWritten)
 	return nil
 }
 
@@ -51,7 +55,7 @@ func (store *Store) ReadAll() ([]db.PersistentKeyValuePair, error) {
 	return keyValuePairs, nil
 }
 
-func (store *Store) Size() uint64 {
+func (store *Store) Size() int64 {
 	return store.size
 }
 

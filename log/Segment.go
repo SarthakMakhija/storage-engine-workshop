@@ -39,7 +39,7 @@ func (segment *Segment) ReadAll() ([]db.PersistentKeyValuePair, error) {
 }
 
 func (segment *Segment) IsMaxed() bool {
-	if segment.store.Size() >= segment.maxSizeBytes {
+	if segment.store.Size() >= int64(segment.maxSizeBytes) {
 		return true
 	}
 	return false
