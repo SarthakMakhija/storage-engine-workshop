@@ -2,8 +2,11 @@ package log
 
 import (
 	"fmt"
+	"io/fs"
 	"path"
 	"storage-engine-workshop/db"
+	"strconv"
+	"strings"
 )
 
 type Segment struct {
@@ -14,7 +17,7 @@ type Segment struct {
 }
 
 func NewSegment(directory string, baseOffset int64, maxSizeBytes uint64) (*Segment, error) {
-	store, err := NewStore(path.Join(directory, fmt.Sprintf("%s%d%s", "WAL_", baseOffset, ".store")))
+	store, err := NewStore(path.Join(directory, fmt.Sprintf("%d%s", baseOffset, ".store")))
 	if err != nil {
 		return nil, err
 	}
@@ -51,4 +54,10 @@ func (segment *Segment) LastOffset() int64 {
 
 func (segment *Segment) Close() {
 	segment.store.Close()
+}
+
+func parseSegmentFileName(file fs.FileInfo) int64 {
+	offsetPrefix := strings.TrimSuffix(file.Name(), path.Ext(file.Name()))
+	offset, _ := strconv.ParseUint(offsetPrefix, 10, 0)
+	return int64(offset)
 }

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io/ioutil"
 	"sort"
 	"storage-engine-workshop/db"
 )
@@ -12,11 +13,12 @@ type WAL struct {
 }
 
 func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
-	segment, err := NewSegment(directory, 0, segmentMaxSizeBytes)
-	if err != nil {
+	log := &WAL{directory: directory}
+	if err := log.init(segmentMaxSizeBytes); err != nil {
 		return nil, err
+	} else {
+		return log, nil
 	}
-	return &WAL{directory: directory, activeSegment: segment}, nil
 }
 
 func (log *WAL) Append(putCommand PutCommand) error {
@@ -45,12 +47,11 @@ func (log *WAL) Append(putCommand PutCommand) error {
 }
 
 func (log *WAL) ReadAll() ([]PutCommand, error) {
-	sortSegments := func() []*Segment {
-		allSegments := append(log.passiveSegments, log.activeSegment)
-		sort.SliceStable(allSegments, func(i, j int) bool {
-			return allSegments[i].baseOffSet < allSegments[j].baseOffSet
-		})
-		return allSegments
+	allSegments := func() []*Segment {
+		copiedPassiveSegments := make([]*Segment, len(log.passiveSegments))
+		copy(copiedPassiveSegments, log.passiveSegments)
+
+		return append(copiedPassiveSegments, log.activeSegment)
 	}
 	keyValuePairsToPutCommands := func(keyValuePairs []db.PersistentKeyValuePair) []PutCommand {
 		var putCommands []PutCommand
@@ -61,7 +62,7 @@ func (log *WAL) ReadAll() ([]PutCommand, error) {
 	}
 	readAllSegments := func() ([]PutCommand, error) {
 		var allPutCommands []PutCommand
-		for _, segment := range sortSegments() {
+		for _, segment := range allSegments() {
 			if keyValuePairs, err := segment.ReadAll(); err != nil {
 				return nil, err
 			} else {
@@ -71,4 +72,74 @@ func (log *WAL) ReadAll() ([]PutCommand, error) {
 		return allPutCommands, nil
 	}
 	return readAllSegments()
+}
+
+func (log *WAL) Close() {
+	log.activeSegment.Close()
+	for _, segment := range log.passiveSegments {
+		segment.Close()
+	}
+}
+
+func (log *WAL) init(segmentMaxSizeBytes uint64) error {
+	sortedSegmentOffsets := func() ([]int64, error) {
+		segmentFile, err := ioutil.ReadDir(log.directory)
+		if err != nil {
+			return nil, err
+		}
+		var baseOffsets []int64
+		for _, file := range segmentFile {
+			baseOffsets = append(baseOffsets, parseSegmentFileName(file))
+		}
+		sort.Slice(baseOffsets, func(i, j int) bool {
+			return baseOffsets[i] < baseOffsets[j]
+		})
+		return baseOffsets, nil
+	}
+	reOpenSegments := func() error {
+		offsets, err := sortedSegmentOffsets()
+		if err != nil {
+			return err
+		}
+		if len(offsets) == 0 {
+			return log.openActiveSegmentAt(0, segmentMaxSizeBytes)
+		}
+		if err := log.openActiveSegmentAt(offsets[len(offsets)-1], segmentMaxSizeBytes); err != nil {
+			return err
+		}
+		for index := 0; index < len(offsets)-1; index++ {
+			segmentOffset := offsets[index]
+			if err := log.openPassiveSegmentAt(segmentOffset, segmentMaxSizeBytes); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return reOpenSegments()
+}
+
+func (log *WAL) openActiveSegmentAt(offset int64, segmentMaxSizeBytes uint64) error {
+	segment, err := log.openSegmentAt(offset, segmentMaxSizeBytes)
+	if err != nil {
+		return err
+	}
+	log.activeSegment = segment
+	return nil
+}
+
+func (log *WAL) openPassiveSegmentAt(offset int64, segmentMaxSizeBytes uint64) error {
+	segment, err := log.openSegmentAt(offset, segmentMaxSizeBytes)
+	if err != nil {
+		return err
+	}
+	log.passiveSegments = append(log.passiveSegments, segment)
+	return nil
+}
+
+func (log *WAL) openSegmentAt(offset int64, segmentMaxSizeBytes uint64) (*Segment, error) {
+	segment, err := NewSegment(log.directory, offset, segmentMaxSizeBytes)
+	if err != nil {
+		return nil, err
+	}
+	return segment, nil
 }
