@@ -68,7 +68,7 @@ func (bloomFilter *BloomFilter) Put(key db.Slice) error {
 	for index := 0; index < len(indices); index++ {
 		bytePosition, mask := bloomFilter.bitPositionInByte(indices[index])
 		if int(bytePosition) >= bloomFilter.store.Size() {
-			return fmt.Errorf("error finding key: Index out of bounds")
+			return errors.New(fmt.Sprintf("bytePosition %v is greater than bloom filter file size for indices[index] %v", bytePosition, indices[index]))
 		}
 		bloomFilter.store.SetBit(bytePosition, mask)
 	}
