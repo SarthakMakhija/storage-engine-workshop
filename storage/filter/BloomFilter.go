@@ -12,14 +12,14 @@ import (
 const byteSize = int(unsafe.Sizeof(byte(0)))
 
 type BloomFilter struct {
-	falsePositiveRate     float64
 	capacity              int
 	bitVectorSize         int
-	store                 *Store
 	bitsPerHashFunction   int
 	numberOfHashFunctions int
-	path                  string
 	dataSize              int
+	path                  string
+	falsePositiveRate     float64
+	store                 *Store
 }
 
 type BloomFilterOptions struct {
@@ -49,13 +49,13 @@ func NewBloomFilter(options BloomFilterOptions) (*BloomFilter, error) {
 		return nil, err
 	}
 	return &BloomFilter{
-		falsePositiveRate:     options.FalsePositiveRate,
 		capacity:              options.Capacity,
 		bitVectorSize:         bitVectorSize,
 		bitsPerHashFunction:   bitsPerHashFunction,
 		numberOfHashFunctions: numberOfHashFunctions,
-		path:                  options.Path,
 		dataSize:              options.DataSize + bitVectorSize,
+		path:                  options.Path,
+		falsePositiveRate:     options.FalsePositiveRate,
 		store:                 store,
 	}, nil
 }
