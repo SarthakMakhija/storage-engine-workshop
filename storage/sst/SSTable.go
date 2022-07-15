@@ -71,14 +71,13 @@ func createSSTableFile(filePath string) (*os.File, error) {
 }
 
 func createBloomFilter(directory string, fileNamePrefix string, totalKeys int) (*filter.BloomFilter, error) {
-	bloomFilters, err := filter.NewBloomFilters(directory)
+	bloomFilters, err := filter.NewBloomFilters(directory, 0.001)
 	if err != nil {
 		return nil, err
 	}
 	bloomFilter, err := bloomFilters.NewBloomFilter(filter.BloomFilterOptions{
-		FalsePositiveRate: 0.001,
-		Capacity:          totalKeys,
-		FileNamePrefix:    fileNamePrefix,
+		Capacity:       totalKeys,
+		FileNamePrefix: fileNamePrefix,
 	})
 	if err != nil {
 		return nil, err

@@ -11,11 +11,10 @@ func TestAdds500KeysAndChecksForTheirPositiveExistence(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilters, _ := NewBloomFilters(directory, 0.001)
 	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
-		FalsePositiveRate: 0.001,
-		Capacity:          500,
-		FileNamePrefix:    "1",
+		Capacity:       500,
+		FileNamePrefix: "1",
 	})
 
 	keyUsing := func(count int) db.Slice {
@@ -37,11 +36,10 @@ func TestAdds500KeysAndChecksForTheExistenceOfMissingKeys(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilters, _ := NewBloomFilters(directory, 0.001)
 	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
-		FalsePositiveRate: 0.001,
-		Capacity:          500,
-		FileNamePrefix:    "2",
+		Capacity:       500,
+		FileNamePrefix: "2",
 	})
 
 	keyUsing := func(count int) db.Slice {

@@ -20,11 +20,10 @@ func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistence(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilters, _ := NewBloomFilters(directory, 0.001)
 	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
-		FalsePositiveRate: 0.001,
-		Capacity:          1,
-		FileNamePrefix:    "1",
+		Capacity:       1,
+		FileNamePrefix: "1",
 	})
 
 	key := db.NewSlice([]byte("Company"))
@@ -39,11 +38,10 @@ func TestAddsAKeyWithBloomFilterAndChecksForTheExistenceOfANonExistingKey(t *tes
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilters, _ := NewBloomFilters(directory, 0.001)
 	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
-		FalsePositiveRate: 0.001,
-		Capacity:          1,
-		FileNamePrefix:    "2",
+		Capacity:       1,
+		FileNamePrefix: "2",
 	})
 
 	key := db.NewSlice([]byte("Company"))
