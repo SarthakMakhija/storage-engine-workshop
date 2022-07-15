@@ -3,8 +3,13 @@ package filter
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"os"
 	"path"
+	"storage-engine-workshop/db"
+	"strconv"
+	"strings"
 )
 
 type BloomFilters struct {
@@ -29,10 +34,17 @@ func NewBloomFilters(directory string, falsePositiveRate float64) (*BloomFilters
 		return nil, errors.New("bloom filter false positive rate must be between 0 and 1")
 	}
 	subDirectory := path.Join(directory, "bloom")
-	if err := os.Mkdir(subDirectory, subDirectoryPermission); err != nil {
-		return nil, err
+	if _, err := os.Stat(subDirectory); os.IsNotExist(err) {
+		if err := os.Mkdir(subDirectory, subDirectoryPermission); err != nil {
+			return nil, err
+		}
 	}
-	return &BloomFilters{directory: subDirectory, falsePositiveRate: falsePositiveRate}, nil
+	filters := &BloomFilters{directory: subDirectory, falsePositiveRate: falsePositiveRate}
+	if err := filters.init(); err != nil {
+		return nil, err
+	} else {
+		return filters, nil
+	}
 }
 
 func (bloomFilters *BloomFilters) NewBloomFilter(options BloomFilterOptions) (*BloomFilter, error) {
@@ -40,13 +52,68 @@ func (bloomFilters *BloomFilters) NewBloomFilter(options BloomFilterOptions) (*B
 		return nil, errors.New("bloom filter needs a prefix which will be a part of its name")
 	}
 
-	fileName := path.Join(bloomFilters.directory, fmt.Sprintf("%s_%v.bloom", options.FileNamePrefix, options.Capacity))
+	fileName := path.Join(bloomFilters.directory, bloomFilters.bloomFilterFileName(options))
 	if filter, err := newBloomFilter(minCapacityToEnsureZeroFalseNegatives(options), options.DataSize, bloomFilters.falsePositiveRate, fileName); err != nil {
 		return nil, err
 	} else {
 		bloomFilters.filters = append(bloomFilters.filters, filter)
 		return filter, nil
 	}
+}
+
+func (bloomFilters *BloomFilters) Close() {
+	for _, bloomFilter := range bloomFilters.filters {
+		bloomFilter.Close()
+	}
+}
+
+func (bloomFilters *BloomFilters) Has(key db.Slice) bool {
+	for _, bloomFilter := range bloomFilters.filters {
+		if bloomFilter.Has(key) {
+			return true
+		}
+	}
+	return false
+}
+
+func (bloomFilters *BloomFilters) init() error {
+	allBloomFilterFiles := func() ([]fs.FileInfo, error) {
+		bloomFiles, err := ioutil.ReadDir(bloomFilters.directory)
+		if err != nil {
+			return nil, err
+		}
+		return bloomFiles, nil
+	}
+	parseFileName := func(file fs.FileInfo) BloomFilterOptions {
+		fileName := strings.TrimSuffix(file.Name(), path.Ext(file.Name()))
+		nameParts := strings.Split(fileName, "_")
+		prefix := nameParts[0]
+		capacity, _ := strconv.Atoi(nameParts[1])
+		dataSize, _ := strconv.Atoi(nameParts[2])
+
+		return BloomFilterOptions{
+			FileNamePrefix: prefix,
+			Capacity:       capacity,
+			DataSize:       dataSize,
+		}
+	}
+	reloadAllBloomFilters := func() error {
+		bloomFilterFiles, err := allBloomFilterFiles()
+		if err != nil {
+			return err
+		}
+		for _, file := range bloomFilterFiles {
+			if _, err := bloomFilters.NewBloomFilter(parseFileName(file)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return reloadAllBloomFilters()
+}
+
+func (bloomFilters *BloomFilters) bloomFilterFileName(options BloomFilterOptions) string {
+	return fmt.Sprintf("%s_%v_%v.bloom", options.FileNamePrefix, options.Capacity, options.DataSize)
 }
 
 func minCapacityToEnsureZeroFalseNegatives(options BloomFilterOptions) int {
