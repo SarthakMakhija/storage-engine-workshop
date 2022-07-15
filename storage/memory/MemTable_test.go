@@ -62,7 +62,7 @@ func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	value := db.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
-	persistentSlice, _ := memTable.AggregatePersistentSlice()
+	persistentSlice := memTable.AggregatePersistentSlice()
 
 	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
 	if persistentKey.GetSlice().AsString() != key.AsString() {
@@ -79,7 +79,7 @@ func TestPutAKeyValueAndGetsTheTotalKeysInMemTable(t *testing.T) {
 	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
 	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
 
-	_, totalKeys := memTable.AggregatePersistentSlice()
+	totalKeys := memTable.TotalKeys()
 
 	if totalKeys != 2 {
 		t.Fatalf("Expected %v keys but received %v", 2, totalKeys)

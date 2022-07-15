@@ -23,11 +23,11 @@ func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, erro
 	if err != nil {
 		return nil, err
 	}
-	persistentSlice, totalKeys := memTable.AggregatePersistentSlice()
+	persistentSlice := memTable.AggregatePersistentSlice()
 	return &SSTable{
 		file:            file,
 		filePath:        filePath,
-		totalKeys:       totalKeys,
+		totalKeys:       memTable.TotalKeys(),
 		persistentSlice: persistentSlice,
 	}, nil
 }

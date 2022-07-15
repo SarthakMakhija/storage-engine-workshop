@@ -82,7 +82,7 @@ func TestGetsTheAggregatePersistentSlice(t *testing.T) {
 
 	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
 
-	persistentSlice, _ := sentinelNode.AggregatePersistentSlice()
+	persistentSlice := sentinelNode.AggregatePersistentSlice()
 	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
 
 	if persistentKey.GetSlice().AsString() != key.AsString() {
