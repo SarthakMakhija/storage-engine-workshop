@@ -18,7 +18,6 @@ type BloomFilter struct {
 	store                 *Store
 	bitsPerHashFunction   int
 	numberOfHashFunctions int
-	seeds                 []uint32
 	path                  string
 	dataSize              int
 }
@@ -54,7 +53,6 @@ func NewBloomFilter(options BloomFilterOptions) (*BloomFilter, error) {
 		capacity:              options.Capacity,
 		bitVectorSize:         bitVectorSize,
 		bitsPerHashFunction:   bitsPerHashFunction,
-		seeds:                 hashSeeds(numberOfHashFunctions),
 		numberOfHashFunctions: numberOfHashFunctions,
 		path:                  options.Path,
 		dataSize:              options.DataSize + bitVectorSize,
@@ -101,7 +99,7 @@ func (bloomFilter *BloomFilter) bitPositionInByte(keyIndex uint64) (uint64, byte
 
 // Use the hash function to get all keyIndices of the given key
 func (bloomFilter *BloomFilter) keyIndices(key db.Slice) []uint64 {
-	indices := make([]uint64, 0, len(bloomFilter.seeds))
+	indices := make([]uint64, 0, bloomFilter.numberOfHashFunctions)
 	runHash := func(key []byte, seed uint32) uint64 {
 		hash, _ := murmur3.Sum128WithSeed(key, seed)
 		return hash
@@ -109,8 +107,8 @@ func (bloomFilter *BloomFilter) keyIndices(key db.Slice) []uint64 {
 	indexForHash := func(hash uint64, index int) uint64 {
 		return uint64(index*bloomFilter.bitsPerHashFunction) + (hash % uint64(bloomFilter.bitsPerHashFunction))
 	}
-	for index, seed := range bloomFilter.seeds {
-		hash := runHash(key.GetRawContent(), seed)
+	for index := 0; index < bloomFilter.numberOfHashFunctions; index++ {
+		hash := runHash(key.GetRawContent(), uint32(index))
 		indices = append(indices, indexForHash(hash, index))
 	}
 	return indices
@@ -128,13 +126,4 @@ func bitVector(capacity int, falsePositiveRate float64, numberOfHashFunctions in
 	bitsPerHashFunction := bitVectorSize / numberOfHashFunctions
 
 	return bitVectorSize, bitsPerHashFunction
-}
-
-//Compute seed values for hash function(s)
-func hashSeeds(numberOfHashFunctions int) []uint32 {
-	seeds := make([]uint32, numberOfHashFunctions)
-	for index := 0; index < len(seeds); index++ {
-		seeds[index] = 32 << int64(index+1)
-	}
-	return seeds
 }
