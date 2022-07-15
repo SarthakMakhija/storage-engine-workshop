@@ -26,15 +26,19 @@
    done
 14. Implement bloom filter with reference to SSTable
    pending
-15. Implement end to end put and get the involves - memtable/bloom filter and SSTable
+15. Implement a get in SSTable that uses index block to read a key
+   done
+16. Implement end to end put and get the involves - memtable/bloom filter and SSTable
    pending
-16. Implement transactions
+17. Implement transactions
    pending
-17. Implement concurrency
+18. Implement concurrency
    pending
-18. Implement update using versioned put
+19. Implement update using versioned put
    pending
-19. Write benchmarks
+20. Write benchmarks
+   pending
+21. Re-look at closing the file
    pending
 
 Questions
