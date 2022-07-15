@@ -62,7 +62,7 @@ func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	value := db.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
-	persistentSlice := memTable.AggregatePersistentSlice()
+	persistentSlice := memTable.AllKeys(func(key db.Slice) {})
 
 	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
 	if persistentKey.GetSlice().AsString() != key.AsString() {

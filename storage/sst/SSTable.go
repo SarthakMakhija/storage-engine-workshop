@@ -7,28 +7,38 @@ import (
 	"os"
 	"path"
 	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
 )
 
 type SSTable struct {
 	file            *os.File
-	filePath        string
 	totalKeys       int
 	persistentSlice db.PersistentSlice
+	bloomFilter     *filter.BloomFilter
 }
 
 func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, error) {
-	filePath := path.Join(directory, "1.sst")
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	ssTableFile, err := createSSTableFile(path.Join(directory, "1.sst"))
 	if err != nil {
 		return nil, err
 	}
-	persistentSlice := memTable.AggregatePersistentSlice()
+	bloomFilter, err := createBloomFilter(path.Join(directory, "1.bloom"), memTable.TotalKeys())
+	if err != nil {
+		return nil, err
+	}
+	persistentSlice := memTable.AllKeys(func(key db.Slice) {
+		err := bloomFilter.Put(key)
+		if err != nil {
+			bloomFilter.Close()
+			return
+		}
+	})
 	return &SSTable{
-		file:            file,
-		filePath:        filePath,
+		file:            ssTableFile,
 		totalKeys:       memTable.TotalKeys(),
 		persistentSlice: persistentSlice,
+		bloomFilter:     bloomFilter,
 	}, nil
 }
 
@@ -50,4 +60,26 @@ func (ssTable *SSTable) Write() error {
 		log.Default().Println("error while closing the ssTable file " + ssTable.file.Name())
 	}
 	return nil
+}
+
+func createSSTableFile(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+func createBloomFilter(filePath string, totalKeys int) (*filter.BloomFilter, error) {
+	bloomFilter, err := filter.NewBloomFilter(
+		filter.BloomFilterOptions{
+			Path:              filePath,
+			FalsePositiveRate: 0.001,
+			Capacity:          totalKeys,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return bloomFilter, nil
 }

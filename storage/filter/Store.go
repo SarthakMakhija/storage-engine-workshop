@@ -2,6 +2,7 @@ package filter
 
 import (
 	"github.com/edsrzf/mmap-go"
+	"log"
 	"os"
 )
 
@@ -11,7 +12,7 @@ type Store struct {
 }
 
 func NewStore(filePath string, size int) (*Store, error) {
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -45,4 +46,11 @@ func (store *Store) GetBit(index uint64) byte {
 
 func (store *Store) Size() int {
 	return len(store.memoryMappedRegion)
+}
+
+func (store *Store) Close() {
+	err := store.file.Close()
+	if err != nil {
+		log.Default().Println("Error while closing the file " + store.file.Name())
+	}
 }
