@@ -1,7 +1,10 @@
 package log
 
 import (
+	"errors"
 	"io/ioutil"
+	"os"
+	"path"
 	"sort"
 	"storage-engine-workshop/db"
 )
@@ -12,8 +15,19 @@ type WAL struct {
 	passiveSegments []*Segment
 }
 
+const subDirectoryPermission = 0744
+
 func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
-	log := &WAL{directory: directory}
+	if len(directory) == 0 {
+		return nil, errors.New("directory can not be empty while creating new log")
+	}
+	subDirectory := path.Join(directory, "wal")
+	if _, err := os.Stat(subDirectory); os.IsNotExist(err) {
+		if err := os.Mkdir(subDirectory, subDirectoryPermission); err != nil {
+			return nil, err
+		}
+	}
+	log := &WAL{directory: subDirectory}
 	if err := log.init(segmentMaxSizeBytes); err != nil {
 		return nil, err
 	} else {
