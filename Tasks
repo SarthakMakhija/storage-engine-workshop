@@ -20,19 +20,21 @@
    pending
 11. Implement flushing in SSTable
    done
-12. Implement a bloom filter without reference to SSTable
+12. Implement read from SSTable
+   pending
+13. Implement a bloom filter without reference to SSTable
    done
-13. Implement persistent bloom filter
+14. Implement bloom filter with reference to SSTable
    pending
-14. Implement end to end put and get the involves - memtable/bloom filter and SSTable
+15. Implement end to end put and get the involves - memtable/bloom filter and SSTable
    pending
-15. Implement transactions
+16. Implement transactions
    pending
-16. Implement concurrency
+17. Implement concurrency
    pending
-17. Implement update using versioned put
+18. Implement update using versioned put
    pending
-18. Write benchmarks
+19. Write benchmarks
    pending
 
 Questions
