@@ -28,8 +28,8 @@
    pending
 15. Implement a get in SSTable that uses index block to read a key
    done
-16. Implement end to end put and get the involves - memtable/bloom filter and SSTable
-   pending
+16. Implement end to end put and get the involves - memtable/bloom filter and SSTable (via test)
+   done
 17. Implement transactions
    pending
 18. Implement concurrency
