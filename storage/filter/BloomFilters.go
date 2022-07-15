@@ -3,6 +3,7 @@ package filter
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path"
 )
 
@@ -18,11 +19,17 @@ type BloomFilterOptions struct {
 	FalsePositiveRate float64
 }
 
+const subDirectoryPermission = 0744
+
 func NewBloomFilters(directory string) (*BloomFilters, error) {
 	if len(directory) == 0 {
 		return nil, errors.New("bloom filter is persistent and needs a directory fileName")
 	}
-	return &BloomFilters{directory: directory}, nil
+	subDirectory := path.Join(directory, "bloom")
+	if err := os.Mkdir(subDirectory, subDirectoryPermission); err != nil {
+		return nil, err
+	}
+	return &BloomFilters{directory: subDirectory}, nil
 }
 
 func (bloomFilters *BloomFilters) NewBloomFilter(options BloomFilterOptions) (*BloomFilter, error) {
