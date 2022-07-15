@@ -23,7 +23,11 @@ func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, erro
 	if err != nil {
 		return nil, err
 	}
-	bloomFilter, err := createBloomFilter(path.Join(directory, "1.bloom"), memTable.TotalKeys())
+	bloomFilter, err := createBloomFilter(path.Join(
+		directory,
+		fmt.Sprintf("%v_%v.bloom", 1, memTable.TotalKeys())),
+		memTable.TotalKeys(),
+	)
 	if err != nil {
 		return nil, err
 	}
