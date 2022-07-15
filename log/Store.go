@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"storage-engine-workshop/db"
 )
 
 type Store struct {
@@ -25,23 +24,23 @@ func NewStore(filePath string) (*Store, error) {
 	return &Store{file: storeFile, size: stat.Size()}, nil
 }
 
-func (store *Store) Append(persistentSlice db.PersistentSlice) error {
-	bytesWritten, err := store.file.Write(persistentSlice.GetPersistentContents())
+func (store *Store) Append(persistentLogSlice PersistentLogSlice) error {
+	bytesWritten, err := store.file.Write(persistentLogSlice.GetPersistentContents())
 	if err != nil {
 		return err
 	}
 	if bytesWritten <= 0 {
-		return errors.New("could not append persistentSlice to WAL")
+		return errors.New("could not append persistentLogSlice to WAL")
 	}
-	if bytesWritten < persistentSlice.Size() {
-		return errors.New(fmt.Sprintf("%v bytes written to WAL, where as total bytes that should have been written are %v", bytesWritten, persistentSlice.Size()))
+	if bytesWritten < persistentLogSlice.Size() {
+		return errors.New(fmt.Sprintf("%v bytes written to WAL, where as total bytes that should have been written are %v", bytesWritten, persistentLogSlice.Size()))
 	}
 	store.size = store.size + int64(bytesWritten)
 	return nil
 }
 
-func (store *Store) ReadAll() ([]db.PersistentKeyValuePair, error) {
-	var keyValuePairs []db.PersistentKeyValuePair
+func (store *Store) ReadAll() ([]PersistentKeyValuePair, error) {
+	var keyValuePairs []PersistentKeyValuePair
 	var currentOffset int64 = 0
 
 	for currentOffset < store.size {
@@ -49,7 +48,7 @@ func (store *Store) ReadAll() ([]db.PersistentKeyValuePair, error) {
 		if err != nil {
 			return nil, err
 		}
-		keyValuePairs = append(keyValuePairs, db.PersistentKeyValuePair{Key: key, Value: value})
+		keyValuePairs = append(keyValuePairs, PersistentKeyValuePair{Key: key, Value: value})
 		currentOffset = nextOffset
 	}
 	return keyValuePairs, nil
@@ -66,19 +65,19 @@ func (store *Store) Close() {
 	}
 }
 
-func (store *Store) readAt(offset int64) (db.PersistentSlice, db.PersistentSlice, int64, error) {
-	bytes := make([]byte, int(db.ReservedTotalSize))
+func (store *Store) readAt(offset int64) (PersistentLogSlice, PersistentLogSlice, int64, error) {
+	bytes := make([]byte, int(ReservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
 	if err != nil {
-		return db.EmptyPersistentSlice(), db.EmptyPersistentSlice(), -1, err
+		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, err
 	}
-	sizeToRead := db.ActualTotalSize(bytes)
+	sizeToRead := ActualTotalSize(bytes)
 	contents := make([]byte, sizeToRead)
 
 	_, err = store.file.ReadAt(contents, offset)
 	if err != nil {
-		return db.EmptyPersistentSlice(), db.EmptyPersistentSlice(), -1, err
+		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, err
 	}
-	key, value := db.NewPersistentSliceKeyValuePair(contents)
+	key, value := NewPersistentLogSliceKeyValuePair(contents)
 	return key, value, offset + int64(sizeToRead), nil
 }

@@ -56,7 +56,7 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 	}
 }
 
-func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
+func TestPutAKeyValueAndGetsAllKeyValues(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))

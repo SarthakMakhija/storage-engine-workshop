@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
-	"storage-engine-workshop/db"
 	"strconv"
 	"strings"
 )
@@ -29,15 +28,15 @@ func NewSegment(directory string, baseOffset int64, maxSizeBytes uint64) (*Segme
 	}, nil
 }
 
-func (segment *Segment) Append(persistentSlice db.PersistentSlice) error {
-	err := segment.store.Append(persistentSlice)
+func (segment *Segment) Append(persistentLogSlice PersistentLogSlice) error {
+	err := segment.store.Append(persistentLogSlice)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (segment *Segment) ReadAll() ([]db.PersistentKeyValuePair, error) {
+func (segment *Segment) ReadAll() ([]PersistentKeyValuePair, error) {
 	return segment.store.ReadAll()
 }
 

@@ -1,7 +1,8 @@
-package db
+package log
 
 import (
 	"encoding/binary"
+	"storage-engine-workshop/db"
 	"unsafe"
 )
 
@@ -11,45 +12,45 @@ var (
 	ReservedKeySize   = unsafe.Sizeof(uint32(0))
 )
 
-type PersistentSlice struct {
+type PersistentLogSlice struct {
 	contents []byte
 }
 
-var emptyPersistentSlice = PersistentSlice{contents: []byte{}}
+var emptyPersistentLogSlice = PersistentLogSlice{contents: []byte{}}
 
-func EmptyPersistentSlice() PersistentSlice {
-	return emptyPersistentSlice
+func EmptyPersistentLogSlice() PersistentLogSlice {
+	return emptyPersistentLogSlice
 }
 
-func NewPersistentSlice(keyValuePair KeyValuePair) PersistentSlice {
+func NewPersistentLogSlice(keyValuePair db.KeyValuePair) PersistentLogSlice {
 	return marshal(keyValuePair)
 }
 
-func NewPersistentSliceKeyValuePair(contents []byte) (PersistentSlice, PersistentSlice) {
+func NewPersistentLogSliceKeyValuePair(contents []byte) (PersistentLogSlice, PersistentLogSlice) {
 	return unmarshal(contents)
 }
 
-func (persistentSlice PersistentSlice) GetPersistentContents() []byte {
-	return persistentSlice.contents
+func (persistentLogSlice PersistentLogSlice) GetPersistentContents() []byte {
+	return persistentLogSlice.contents
 }
 
-func (persistentSlice PersistentSlice) GetSlice() Slice {
-	return NewSlice(persistentSlice.GetPersistentContents())
+func (persistentLogSlice PersistentLogSlice) GetSlice() db.Slice {
+	return db.NewSlice(persistentLogSlice.GetPersistentContents())
 }
 
-func (persistentSlice PersistentSlice) Size() int {
-	return len(persistentSlice.contents)
+func (persistentLogSlice PersistentLogSlice) Size() int {
+	return len(persistentLogSlice.contents)
 }
 
-func (persistentSlice *PersistentSlice) Add(other PersistentSlice) {
-	persistentSlice.contents = append(persistentSlice.contents, other.contents...)
+func (persistentLogSlice *PersistentLogSlice) Add(other PersistentLogSlice) {
+	persistentLogSlice.contents = append(persistentLogSlice.contents, other.contents...)
 }
 
 func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
-func marshal(keyValuePair KeyValuePair) PersistentSlice {
+func marshal(keyValuePair db.KeyValuePair) PersistentLogSlice {
 	reservedTotalSize, reservedKeySize := ReservedTotalSize, ReservedKeySize
 	actualTotalSize :=
 		len(keyValuePair.Key.GetRawContent()) +
@@ -71,13 +72,13 @@ func marshal(keyValuePair KeyValuePair) PersistentSlice {
 	offset = offset + len(keyValuePair.Key.GetRawContent())
 
 	copy(bytes[offset:], keyValuePair.Value.GetRawContent())
-	return PersistentSlice{contents: bytes}
+	return PersistentLogSlice{contents: bytes}
 }
 
-func unmarshal(bytes []byte) (PersistentSlice, PersistentSlice) {
+func unmarshal(bytes []byte) (PersistentLogSlice, PersistentLogSlice) {
 	bytes = bytes[ReservedTotalSize:]
 	keySize := bigEndian.Uint32(bytes)
 	keyEndOffset := uint32(ReservedKeySize) + keySize
 
-	return PersistentSlice{contents: bytes[ReservedKeySize:keyEndOffset]}, PersistentSlice{contents: bytes[keyEndOffset:]}
+	return PersistentLogSlice{contents: bytes[ReservedKeySize:keyEndOffset]}, PersistentLogSlice{contents: bytes[keyEndOffset:]}
 }

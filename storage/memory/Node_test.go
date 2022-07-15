@@ -71,7 +71,7 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNode(t *testing.T) {
 	}
 }
 
-func TestGetsTheAggregatePersistentSlice(t *testing.T) {
+func TestGetsAllKeyValues(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 

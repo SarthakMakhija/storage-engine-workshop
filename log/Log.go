@@ -27,7 +27,7 @@ func (log *WAL) Append(putCommand PutCommand) error {
 		return log.openActiveSegmentAt(log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes)
 	}
 	appendToActiveSegment := func() error {
-		if err := log.activeSegment.Append(db.NewPersistentSlice(putCommand.keyValuePair)); err != nil {
+		if err := log.activeSegment.Append(NewPersistentLogSlice(putCommand.keyValuePair)); err != nil {
 			return err
 		}
 		return nil
@@ -48,7 +48,7 @@ func (log *WAL) ReadAll() ([]PutCommand, error) {
 
 		return append(copiedPassiveSegments, log.activeSegment)
 	}
-	keyValuePairsToPutCommands := func(keyValuePairs []db.PersistentKeyValuePair) []PutCommand {
+	keyValuePairsToPutCommands := func(keyValuePairs []PersistentKeyValuePair) []PutCommand {
 		putCommands := make([]PutCommand, len(keyValuePairs))
 		for index, pair := range keyValuePairs {
 			putCommands[index] =
