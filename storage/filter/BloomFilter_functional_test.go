@@ -8,15 +8,15 @@ import (
 )
 
 func TestAdds500KeysAndChecksForTheirPositiveExistence(t *testing.T) {
-	defer os.RemoveAll("./bloom.filter")
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
 
-	bloomFilter, _ := NewBloomFilter(
-		BloomFilterOptions{
-			Path:              "./bloom.filter",
-			FalsePositiveRate: 0.001,
-			Capacity:          500,
-		},
-	)
+	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
+		FalsePositiveRate: 0.001,
+		Capacity:          500,
+		FileNamePrefix:    "1",
+	})
 
 	keyUsing := func(count int) db.Slice {
 		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
@@ -34,15 +34,15 @@ func TestAdds500KeysAndChecksForTheirPositiveExistence(t *testing.T) {
 }
 
 func TestAdds500KeysAndChecksForTheExistenceOfMissingKeys(t *testing.T) {
-	defer os.RemoveAll("./bloom.filter")
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
 
-	bloomFilter, _ := NewBloomFilter(
-		BloomFilterOptions{
-			Path:              "./bloom.filter",
-			FalsePositiveRate: 0.001,
-			Capacity:          500,
-		},
-	)
+	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
+		FalsePositiveRate: 0.001,
+		Capacity:          500,
+		FileNamePrefix:    "2",
+	})
 
 	keyUsing := func(count int) db.Slice {
 		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))

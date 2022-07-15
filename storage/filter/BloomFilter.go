@@ -17,42 +17,29 @@ type BloomFilter struct {
 	bitsPerHashFunction   int
 	numberOfHashFunctions int
 	dataSize              int
-	path                  string
+	fileName              string
 	falsePositiveRate     float64
 	store                 *Store
 }
 
-type BloomFilterOptions struct {
-	Path              string
-	FalsePositiveRate float64
-	Capacity          int
-	DataSize          int
-}
-
-func NewBloomFilter(options BloomFilterOptions) (*BloomFilter, error) {
-	if options.FalsePositiveRate <= 0 || options.FalsePositiveRate >= 1 {
-		return nil, errors.New("bloom filter false positive rate must be between 0 and 1")
-	}
-	if len(options.Path) == 0 {
-		return nil, errors.New("bloom filter is persistent and needs a file path")
-	}
-	numberOfHashFunctions := numberOfHashFunctions(options.FalsePositiveRate)
-	bitVectorSize, bitsPerHashFunction := bitVector(options.Capacity, options.FalsePositiveRate, numberOfHashFunctions)
+func newBloomFilter(capacity int, dataSize int, falsePositiveRate float64, fileName string) (*BloomFilter, error) {
+	numberOfHashFunctions := numberOfHashFunctions(falsePositiveRate)
+	bitVectorSize, bitsPerHashFunction := bitVector(capacity, falsePositiveRate, numberOfHashFunctions)
 	bitVectorSize = bitVectorSize / byteSize
 	bitVectorSize = bitVectorSize + byteSize
 
-	store, err := NewStore(options.Path, options.DataSize+bitVectorSize)
+	store, err := NewStore(fileName, dataSize+bitVectorSize)
 	if err != nil {
 		return nil, err
 	}
 	return &BloomFilter{
-		capacity:              options.Capacity,
+		capacity:              capacity,
 		bitVectorSize:         bitVectorSize,
 		bitsPerHashFunction:   bitsPerHashFunction,
 		numberOfHashFunctions: numberOfHashFunctions,
-		dataSize:              options.DataSize + bitVectorSize,
-		path:                  options.Path,
-		falsePositiveRate:     options.FalsePositiveRate,
+		dataSize:              dataSize + bitVectorSize,
+		fileName:              fileName,
+		falsePositiveRate:     falsePositiveRate,
 		store:                 store,
 	}, nil
 }

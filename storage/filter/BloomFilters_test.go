@@ -1,21 +1,32 @@
 package filter
 
 import (
+	"io/ioutil"
+	"log"
 	"os"
 	"storage-engine-workshop/db"
 	"testing"
 )
 
-func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistence(t *testing.T) {
-	defer os.RemoveAll("./bloom.filter")
+func tempDirectory() string {
+	dir, err := ioutil.TempDir(".", "bloom")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
+}
 
-	bloomFilter, _ := NewBloomFilter(
-		BloomFilterOptions{
-			Path:              "./bloom.filter",
-			FalsePositiveRate: 0.001,
-			Capacity:          500,
-		},
-	)
+func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistence(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
+		FalsePositiveRate: 0.001,
+		Capacity:          1,
+		FileNamePrefix:    "1",
+	})
+
 	key := db.NewSlice([]byte("Company"))
 	_ = bloomFilter.Put(key)
 
@@ -25,15 +36,16 @@ func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistence(t *testing.T) {
 }
 
 func TestAddsAKeyWithBloomFilterAndChecksForTheExistenceOfANonExistingKey(t *testing.T) {
-	defer os.RemoveAll("./bloom.filter")
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
 
-	bloomFilter, _ := NewBloomFilter(
-		BloomFilterOptions{
-			Path:              "./bloom.filter",
-			FalsePositiveRate: 0.001,
-			Capacity:          500,
-		},
-	)
+	bloomFilters, _ := NewBloomFilters(directory)
+	bloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
+		FalsePositiveRate: 0.001,
+		Capacity:          1,
+		FileNamePrefix:    "2",
+	})
+
 	key := db.NewSlice([]byte("Company"))
 	_ = bloomFilter.Put(key)
 

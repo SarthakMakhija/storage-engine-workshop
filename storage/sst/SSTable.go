@@ -23,11 +23,7 @@ func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, erro
 	if err != nil {
 		return nil, err
 	}
-	bloomFilter, err := createBloomFilter(path.Join(
-		directory,
-		fmt.Sprintf("%v_%v.bloom", 1, memTable.TotalKeys())),
-		memTable.TotalKeys(),
-	)
+	bloomFilter, err := createBloomFilter(directory, "1", memTable.TotalKeys())
 	if err != nil {
 		return nil, err
 	}
@@ -74,14 +70,16 @@ func createSSTableFile(filePath string) (*os.File, error) {
 	return file, nil
 }
 
-func createBloomFilter(filePath string, totalKeys int) (*filter.BloomFilter, error) {
-	bloomFilter, err := filter.NewBloomFilter(
-		filter.BloomFilterOptions{
-			Path:              filePath,
-			FalsePositiveRate: 0.001,
-			Capacity:          totalKeys,
-		},
-	)
+func createBloomFilter(directory string, fileNamePrefix string, totalKeys int) (*filter.BloomFilter, error) {
+	bloomFilters, err := filter.NewBloomFilters(directory)
+	if err != nil {
+		return nil, err
+	}
+	bloomFilter, err := bloomFilters.NewBloomFilter(filter.BloomFilterOptions{
+		FalsePositiveRate: 0.001,
+		Capacity:          totalKeys,
+		FileNamePrefix:    fileNamePrefix,
+	})
 	if err != nil {
 		return nil, err
 	}
