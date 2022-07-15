@@ -8,7 +8,6 @@ import (
 
 type Store struct {
 	file *os.File
-	size int64
 }
 
 func NewStore(filePath string) (*Store, error) {

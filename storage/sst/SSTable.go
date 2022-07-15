@@ -12,7 +12,6 @@ import (
 )
 
 type SSTable struct {
-	totalKeys     int
 	store         *Store
 	keyValuePairs []db.KeyValuePair
 	bloomFilter   *filter.BloomFilter
@@ -28,7 +27,6 @@ func NewSSTableFrom(memTable *memory.MemTable, bloomFilters *filter.BloomFilters
 		return nil, err
 	}
 	return &SSTable{
-		totalKeys:     memTable.TotalKeys(),
 		store:         store,
 		keyValuePairs: memTable.AllKeyValues(),
 		bloomFilter:   bloomFilter,
