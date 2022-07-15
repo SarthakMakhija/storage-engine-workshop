@@ -17,15 +17,20 @@ type MemTableWriteStatus struct {
 
 type MemTableWriter struct {
 	memTable  *memory.MemTable
+	ssTables  *sst.SSTables
 	ssTable   *sst.SSTable
 	directory string
 }
 
 func NewMemTableWriter(memTable *memory.MemTable, directory string) (*MemTableWriter, error) {
+	ssTables, err := sst.NewSSTables(directory)
+	if err != nil {
+		return nil, err
+	}
 	return &MemTableWriter{
 		memTable:  memTable,
 		directory: directory,
-		ssTable:   nil,
+		ssTables:  ssTables,
 	}, nil
 }
 
@@ -48,7 +53,7 @@ func (memTableWriter *MemTableWriter) Write() <-chan MemTableWriteStatus {
 }
 
 func (memTableWriter *MemTableWriter) mutateWithSsTable() error {
-	ssTable, err := sst.NewSSTableFrom(memTableWriter.memTable, memTableWriter.directory)
+	ssTable, err := memTableWriter.ssTables.NewSSTable(memTableWriter.memTable)
 	if err != nil {
 		return err
 	}

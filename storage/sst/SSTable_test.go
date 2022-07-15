@@ -25,8 +25,28 @@ func TestWritesSSTableToDisk(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	if err := ssTable.Write(); err != nil {
+		t.Fatalf("Expected no errors while dump sstable file but received an error: %v", err)
+	}
+}
+
+func TestWrites2SSTablesToDisk(t *testing.T) {
+	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
+	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
+
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	ssTables, _ := NewSSTables(directory)
+	ssTableA, _ := ssTables.NewSSTable(memTable)
+	ssTableB, _ := ssTables.NewSSTable(memTable)
+
+	if err := ssTableA.Write(); err != nil {
+		t.Fatalf("Expected no errors while dump sstable file but received an error: %v", err)
+	}
+	if err := ssTableB.Write(); err != nil {
 		t.Fatalf("Expected no errors while dump sstable file but received an error: %v", err)
 	}
 }
@@ -39,7 +59,8 @@ func TestCreatesSSTableAndPutsKeysInBloomFilter(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	_ = ssTable.Write()
 
 	contains := ssTable.bloomFilter.Has(db.NewSlice([]byte("SDD")))
@@ -51,14 +72,15 @@ func TestCreatesSSTableAndPutsKeysInBloomFilter(t *testing.T) {
 	}
 }
 
-func TestGetFromSSTable(t *testing.T) {
+func TestGetsFromSSTable(t *testing.T) {
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	_ = ssTable.Write()
 
 	getResult := ssTable.Get(db.NewSlice([]byte("HDD")), comparator.StringKeyComparator{})
@@ -67,7 +89,7 @@ func TestGetFromSSTable(t *testing.T) {
 	}
 }
 
-func TestGetFromSSTableContainingMultipleKeyValues(t *testing.T) {
+func TestGetsFromSSTableContainingMultipleKeyValues(t *testing.T) {
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
 	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
 	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
@@ -76,7 +98,8 @@ func TestGetFromSSTableContainingMultipleKeyValues(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	_ = ssTable.Write()
 
 	getResult := ssTable.Get(db.NewSlice([]byte("SDD")), comparator.StringKeyComparator{})
@@ -94,7 +117,8 @@ func TestGetNonExistentKeyFromSSTableContainingMultipleKeyValues(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	_ = ssTable.Write()
 
 	getResult := ssTable.Get(db.NewSlice([]byte("Unknown")), comparator.StringKeyComparator{})

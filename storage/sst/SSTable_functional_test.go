@@ -24,7 +24,8 @@ func TestCreatesSSTableWith500KeysAndPutsAllKeysInBloomFilter(t *testing.T) {
 		memTable.Put(keyUsing(count), valueUsing(count))
 	}
 
-	ssTable, _ := NewSSTableFrom(memTable, directory)
+	ssTables, _ := NewSSTables(directory)
+	ssTable, _ := ssTables.NewSSTable(memTable)
 	_ = ssTable.Write()
 
 	for count := 1; count <= 500; count++ {

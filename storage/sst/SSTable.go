@@ -2,11 +2,13 @@ package sst
 
 import (
 	"errors"
+	"fmt"
 	"path"
 	"storage-engine-workshop/db"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
+	"strconv"
 )
 
 type SSTable struct {
@@ -16,12 +18,12 @@ type SSTable struct {
 	bloomFilter   *filter.BloomFilter
 }
 
-func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, error) {
-	store, err := NewStore(path.Join(directory, "1.sst"))
+func NewSSTableFrom(memTable *memory.MemTable, bloomFilters *filter.BloomFilters, directory string, fileId int) (*SSTable, error) {
+	store, err := NewStore(path.Join(directory, fmt.Sprintf("%v.sst", fileId)))
 	if err != nil {
 		return nil, err
 	}
-	bloomFilter, err := createBloomFilter(directory, "1", memTable.TotalKeys())
+	bloomFilter, err := createBloomFilter(fileId, memTable.TotalKeys(), bloomFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -102,14 +104,10 @@ func (ssTable *SSTable) writeKeyValues() ([]int64, int64, error) {
 	return beginOffsetByKey, offset, nil
 }
 
-func createBloomFilter(directory string, fileNamePrefix string, totalKeys int) (*filter.BloomFilter, error) {
-	bloomFilters, err := filter.NewBloomFilters(directory, 0.001)
-	if err != nil {
-		return nil, err
-	}
+func createBloomFilter(fileNamePrefix int, totalKeys int, bloomFilters *filter.BloomFilters) (*filter.BloomFilter, error) {
 	bloomFilter, err := bloomFilters.NewBloomFilter(filter.BloomFilterOptions{
 		Capacity:       totalKeys,
-		FileNamePrefix: fileNamePrefix,
+		FileNamePrefix: strconv.Itoa(fileNamePrefix),
 	})
 	if err != nil {
 		return nil, err
