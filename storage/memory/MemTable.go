@@ -38,7 +38,7 @@ func (memTable *MemTable) MultiGet(keys []db.Slice) db.MultiGetResult {
 	return memTable.head.MultiGet(keys, memTable.keyComparator)
 }
 
-func (memTable *MemTable) AggregatePersistentSlice() db.PersistentSlice {
+func (memTable *MemTable) AggregatePersistentSlice() (db.PersistentSlice, int) {
 	return memTable.head.AggregatePersistentSlice()
 }
 

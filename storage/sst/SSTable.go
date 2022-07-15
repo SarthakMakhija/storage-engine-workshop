@@ -13,6 +13,7 @@ import (
 type SSTable struct {
 	file            *os.File
 	filePath        string
+	totalKeys       int
 	persistentSlice db.PersistentSlice
 }
 
@@ -22,10 +23,12 @@ func NewSSTableFrom(memTable *memory.MemTable, directory string) (*SSTable, erro
 	if err != nil {
 		return nil, err
 	}
+	persistentSlice, totalKeys := memTable.AggregatePersistentSlice()
 	return &SSTable{
 		file:            file,
 		filePath:        filePath,
-		persistentSlice: memTable.AggregatePersistentSlice(),
+		totalKeys:       totalKeys,
+		persistentSlice: persistentSlice,
 	}, nil
 }
 

@@ -72,17 +72,19 @@ func (node *Node) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparat
 	return response
 }
 
-func (node *Node) AggregatePersistentSlice() db.PersistentSlice {
+func (node *Node) AggregatePersistentSlice() (db.PersistentSlice, int) {
 	level, current := 0, node
 	current = current.forwards[level]
 
 	persistentSlice := db.EmptyPersistentSlice()
+	totalKeys := 0
 	for current != nil {
 		slice := db.NewPersistentSlice(db.KeyValuePair{Key: current.key, Value: current.value})
 		persistentSlice.Add(slice)
 		current = current.forwards[level]
+		totalKeys = totalKeys + 1
 	}
-	return persistentSlice
+	return persistentSlice, totalKeys
 }
 
 func (node *Node) nodeMatching(key db.Slice, keyComparator comparator.KeyComparator) (*Node, bool) {
