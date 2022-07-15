@@ -70,3 +70,26 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNode(t *testing.T) {
 		}
 	}
 }
+
+func TestGetsTheAggregatePersistentSlice(t *testing.T) {
+	const maxLevel = 8
+	keyComparator := comparator.StringKeyComparator{}
+
+	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
+
+	key := db.NewSlice([]byte("HDD"))
+	value := db.NewSlice([]byte("Hard disk"))
+
+	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
+
+	persistentSlice := sentinelNode.AggregatePersistentSlice()
+	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
+
+	if persistentKey.GetSlice().AsString() != key.AsString() {
+		t.Fatalf("Expected persistent key to be %v received %v", key.AsString(), persistentKey.GetSlice().AsString())
+	}
+
+	if persistentValue.GetSlice().AsString() != value.AsString() {
+		t.Fatalf("Expected persistent value to be %v received %v", value.AsString(), persistentValue.GetSlice().AsString())
+	}
+}
