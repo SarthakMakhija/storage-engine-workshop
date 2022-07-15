@@ -126,3 +126,36 @@ func TestGetNonExistentKeyFromSSTableContainingMultipleKeyValues(t *testing.T) {
 		t.Fatalf("Expected value to be missing for key %v, but was present", "Unknown")
 	}
 }
+
+func TestGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
+	directory := tempDirectory()
+	ssTables, _ := NewSSTables(directory)
+	defer os.RemoveAll(directory)
+
+	memTableA := memory.NewMemTable(10, comparator.StringKeyComparator{})
+	memTableA.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
+	memTableA.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
+
+	ssTableA, _ := ssTables.NewSSTable(memTableA)
+	_ = ssTableA.Write()
+
+	memTableB := memory.NewMemTable(10, comparator.StringKeyComparator{})
+	memTableB.Put(db.NewSlice([]byte("PMEM")), db.NewSlice([]byte("Persistent memory")))
+	memTableB.Put(db.NewSlice([]byte("NVMe")), db.NewSlice([]byte("Non volatile media")))
+
+	ssTableB, _ := ssTables.NewSSTable(memTableB)
+	_ = ssTableB.Write()
+
+	requestedKeyValuePairs := []db.KeyValuePair{
+		{db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk"))},
+		{db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state"))},
+		{db.NewSlice([]byte("PMEM")), db.NewSlice([]byte("Persistent memory"))},
+		{db.NewSlice([]byte("NVMe")), db.NewSlice([]byte("Non volatile media"))},
+	}
+	for _, pair := range requestedKeyValuePairs {
+		getResult := ssTables.Get(pair.Key, comparator.StringKeyComparator{})
+		if getResult.Value.AsString() != pair.Value.AsString() {
+			t.Fatalf("Expected value to be %v, received %v", pair.Value.AsString(), getResult.Value.AsString())
+		}
+	}
+}

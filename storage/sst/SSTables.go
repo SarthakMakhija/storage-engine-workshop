@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"path"
+	"storage-engine-workshop/db"
+	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
 )
@@ -46,4 +48,16 @@ func (ssTables *SSTables) NewSSTable(memTable *memory.MemTable) (*SSTable, error
 	ssTables.tables = append(ssTables.tables, ssTable)
 	ssTables.nextFileId = ssTables.nextFileId + 1
 	return ssTable, nil
+}
+
+func (ssTables SSTables) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
+	for index := len(ssTables.tables) - 1; index >= 0; index-- {
+		table := ssTables.tables[index]
+		if table.bloomFilter.Has(key) {
+			if getResult := table.Get(key, keyComparator); getResult.Exists {
+				return getResult
+			}
+		}
+	}
+	return db.GetResult{Exists: false}
 }
