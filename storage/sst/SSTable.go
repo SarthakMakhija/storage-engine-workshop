@@ -4,7 +4,6 @@ import (
 	"errors"
 	"path"
 	"storage-engine-workshop/db"
-	"storage-engine-workshop/log"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
@@ -68,20 +67,20 @@ func (ssTable *SSTable) Get(key db.Slice, keyComparator comparator.KeyComparator
 	return db.GetResult{Value: resultValue.GetSlice(), Exists: true}
 }
 
-func (ssTable *SSTable) readAt(offset int64) (log.PersistentLogSlice, log.PersistentLogSlice, error) {
-	bytes := make([]byte, int(log.ReservedTotalSize))
+func (ssTable *SSTable) readAt(offset int64) (PersistentSSTableSlice, PersistentSSTableSlice, error) {
+	bytes := make([]byte, int(reservedTotalSize))
 	_, err := ssTable.store.ReadAt(bytes, offset)
 	if err != nil {
-		return log.EmptyPersistentLogSlice(), log.EmptyPersistentLogSlice(), err
+		return EmptyPersistentSSTableSlice(), EmptyPersistentSSTableSlice(), err
 	}
-	sizeToRead := log.ActualTotalSize(bytes)
+	sizeToRead := ActualTotalSize(bytes)
 	contents := make([]byte, sizeToRead)
 
 	_, err = ssTable.store.ReadAt(contents, offset)
 	if err != nil {
-		return log.EmptyPersistentLogSlice(), log.EmptyPersistentLogSlice(), err
+		return EmptyPersistentSSTableSlice(), EmptyPersistentSSTableSlice(), err
 	}
-	key, value := log.NewPersistentLogSliceKeyValuePair(contents)
+	key, value := NewPersistentSSTableSliceKeyValuePair(contents)
 	return key, value, nil
 }
 
@@ -90,7 +89,7 @@ func (ssTable *SSTable) writeKeyValues() ([]int64, int64, error) {
 	beginOffsetByKey := make([]int64, len(ssTable.keyValuePairs))
 
 	for index, keyValuePair := range ssTable.keyValuePairs {
-		if bytesWritten, err := ssTable.store.WriteAt(log.NewPersistentLogSlice(keyValuePair).GetPersistentContents(), offset); err != nil {
+		if bytesWritten, err := ssTable.store.WriteAt(NewPersistentSSTableSlice(keyValuePair).GetPersistentContents(), offset); err != nil {
 			return nil, 0, err
 		} else {
 			beginOffsetByKey[index] = offset

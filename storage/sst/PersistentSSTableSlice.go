@@ -1,4 +1,4 @@
-package log
+package sst
 
 import (
 	"encoding/binary"
@@ -12,45 +12,40 @@ var (
 	reservedKeySize   = unsafe.Sizeof(uint32(0))
 )
 
-type PersistentLogSlice struct {
+type PersistentSSTableSlice struct {
 	contents []byte
 }
 
-var emptyPersistentLogSlice = PersistentLogSlice{contents: []byte{}}
+var emptyPersistentSSTableSlice = PersistentSSTableSlice{contents: []byte{}}
 
-func EmptyPersistentLogSlice() PersistentLogSlice {
-	return emptyPersistentLogSlice
+func EmptyPersistentSSTableSlice() PersistentSSTableSlice {
+	return emptyPersistentSSTableSlice
 }
-
-func NewPersistentLogSlice(keyValuePair db.KeyValuePair) PersistentLogSlice {
+func NewPersistentSSTableSlice(keyValuePair db.KeyValuePair) PersistentSSTableSlice {
 	return marshal(keyValuePair)
 }
 
-func NewPersistentLogSliceKeyValuePair(contents []byte) (PersistentLogSlice, PersistentLogSlice) {
+func NewPersistentSSTableSliceKeyValuePair(contents []byte) (PersistentSSTableSlice, PersistentSSTableSlice) {
 	return unmarshal(contents)
 }
 
-func (persistentLogSlice PersistentLogSlice) GetPersistentContents() []byte {
+func (persistentLogSlice PersistentSSTableSlice) GetPersistentContents() []byte {
 	return persistentLogSlice.contents
 }
 
-func (persistentLogSlice PersistentLogSlice) GetSlice() db.Slice {
+func (persistentLogSlice PersistentSSTableSlice) GetSlice() db.Slice {
 	return db.NewSlice(persistentLogSlice.GetPersistentContents())
 }
 
-func (persistentLogSlice PersistentLogSlice) Size() int {
+func (persistentLogSlice PersistentSSTableSlice) Size() int {
 	return len(persistentLogSlice.contents)
-}
-
-func (persistentLogSlice *PersistentLogSlice) Add(other PersistentLogSlice) {
-	persistentLogSlice.contents = append(persistentLogSlice.contents, other.contents...)
 }
 
 func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
-func marshal(keyValuePair db.KeyValuePair) PersistentLogSlice {
+func marshal(keyValuePair db.KeyValuePair) PersistentSSTableSlice {
 	reservedTotalSize, reservedKeySize := reservedTotalSize, reservedKeySize
 	actualTotalSize :=
 		len(keyValuePair.Key.GetRawContent()) +
@@ -58,7 +53,7 @@ func marshal(keyValuePair db.KeyValuePair) PersistentLogSlice {
 			int(reservedKeySize) +
 			int(reservedTotalSize)
 
-	//The way PutCommand is encoded is: 4 bytes for totalSize | 4 bytes for keySize | Key content | Value content
+	//The way keyValuePair is encoded is: 4 bytes for totalSize | 4 bytes for keySize | Key content | Value content
 	bytes := make([]byte, actualTotalSize)
 	offset := 0
 
@@ -72,13 +67,13 @@ func marshal(keyValuePair db.KeyValuePair) PersistentLogSlice {
 	offset = offset + len(keyValuePair.Key.GetRawContent())
 
 	copy(bytes[offset:], keyValuePair.Value.GetRawContent())
-	return PersistentLogSlice{contents: bytes}
+	return PersistentSSTableSlice{contents: bytes}
 }
 
-func unmarshal(bytes []byte) (PersistentLogSlice, PersistentLogSlice) {
+func unmarshal(bytes []byte) (PersistentSSTableSlice, PersistentSSTableSlice) {
 	bytes = bytes[reservedTotalSize:]
 	keySize := bigEndian.Uint32(bytes)
 	keyEndOffset := uint32(reservedKeySize) + keySize
 
-	return PersistentLogSlice{contents: bytes[reservedKeySize:keyEndOffset]}, PersistentLogSlice{contents: bytes[keyEndOffset:]}
+	return PersistentSSTableSlice{contents: bytes[reservedKeySize:keyEndOffset]}, PersistentSSTableSlice{contents: bytes[keyEndOffset:]}
 }

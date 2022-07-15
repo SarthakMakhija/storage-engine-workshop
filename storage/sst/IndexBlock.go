@@ -1,16 +1,13 @@
 package sst
 
 import (
-	"encoding/binary"
 	"storage-engine-workshop/db"
 	"storage-engine-workshop/storage/comparator"
 	"unsafe"
 )
 
 var (
-	bigEndian          = binary.BigEndian
 	ReservedOffsetSize = unsafe.Sizeof(uint64(0))
-	ReservedKeySize    = unsafe.Sizeof(uint32(0))
 )
 
 type IndexBlock struct {
@@ -49,13 +46,13 @@ func (indexBlock *IndexBlock) GetKeyOffset(key db.Slice, keyComparator comparato
 	index := 0
 	for index < len(blockBytes) {
 		actualKeySize := bigEndian.Uint32(blockBytes[index:])
-		keyBeginIndex := index + int(ReservedKeySize) + int(ReservedOffsetSize)
+		keyBeginIndex := index + int(reservedKeySize) + int(ReservedOffsetSize)
 		serializedKey := blockBytes[keyBeginIndex : keyBeginIndex+int(actualKeySize)]
 		if keyComparator.Compare(db.NewSlice(serializedKey), key) == 0 {
-			keyOffset := bigEndian.Uint64(blockBytes[(index + int(ReservedKeySize)):])
+			keyOffset := bigEndian.Uint64(blockBytes[(index + int(reservedKeySize)):])
 			return int64(keyOffset), nil
 		}
-		index = index + int(ReservedKeySize) + int(ReservedOffsetSize) + int(actualKeySize)
+		index = index + int(reservedKeySize) + int(ReservedOffsetSize) + int(actualKeySize)
 	}
 	return -1, nil
 }
@@ -82,14 +79,14 @@ func (indexBlock *IndexBlock) readIndexBlock() ([]byte, error) {
 }
 
 func (indexBlock *IndexBlock) marshal(key db.Slice, keyBeginOffset int64) []byte {
-	actualTotalSize := uint64(ReservedKeySize) + uint64(ReservedOffsetSize) + uint64(key.Size())
+	actualTotalSize := uint64(reservedKeySize) + uint64(ReservedOffsetSize) + uint64(key.Size())
 
 	//The way index block is encoded is: 4 bytes for keySize | 8 bytes for offsetSize | Key content
 	bytes := make([]byte, actualTotalSize)
 	index := 0
 
 	bigEndian.PutUint32(bytes, uint32(key.Size()))
-	index = index + int(ReservedKeySize)
+	index = index + int(reservedKeySize)
 
 	bigEndian.PutUint64(bytes[index:], uint64(keyBeginOffset))
 	index = index + int(ReservedOffsetSize)

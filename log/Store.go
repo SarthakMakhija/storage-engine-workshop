@@ -66,7 +66,7 @@ func (store *Store) Close() {
 }
 
 func (store *Store) readAt(offset int64) (PersistentLogSlice, PersistentLogSlice, int64, error) {
-	bytes := make([]byte, int(ReservedTotalSize))
+	bytes := make([]byte, int(reservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
 	if err != nil {
 		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, err
