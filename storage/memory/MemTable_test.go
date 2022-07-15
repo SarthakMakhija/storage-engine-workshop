@@ -62,14 +62,13 @@ func TestPutAKeyValueAndGetsTheAggregatePersistentSlice(t *testing.T) {
 	value := db.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
-	persistentSlice := memTable.AllKeys(func(key db.Slice) {})
+	keyValuePairs := memTable.AllKeyValues()
 
-	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
-	if persistentKey.GetSlice().AsString() != key.AsString() {
-		t.Fatalf("Expected key to be %v from persistent slice but received %v", key.AsString(), persistentKey.GetSlice().AsString())
+	if keyValuePairs[0].Key.AsString() != key.AsString() {
+		t.Fatalf("Expected key to be %v from all keys but received %v", key.AsString(), keyValuePairs[0].Key.AsString())
 	}
-	if persistentValue.GetSlice().AsString() != value.AsString() {
-		t.Fatalf("Expected value to be %v from persistent slice but received %v", value.AsString(), persistentValue.GetSlice().AsString())
+	if keyValuePairs[0].Value.AsString() != value.AsString() {
+		t.Fatalf("Expected value to be %v from all keys but received %v", value.AsString(), keyValuePairs[0].Value.AsString())
 	}
 }
 

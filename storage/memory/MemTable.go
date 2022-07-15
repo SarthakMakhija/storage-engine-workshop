@@ -40,8 +40,8 @@ func (memTable *MemTable) MultiGet(keys []db.Slice) db.MultiGetResult {
 	return memTable.head.MultiGet(keys, memTable.keyComparator)
 }
 
-func (memTable *MemTable) AllKeys(keyPublisher func(key db.Slice)) db.PersistentSlice {
-	return memTable.head.AllKeys(keyPublisher)
+func (memTable *MemTable) AllKeyValues() []db.KeyValuePair {
+	return memTable.head.AllKeyValues()
 }
 
 func (memTable *MemTable) TotalSize() uint32 {

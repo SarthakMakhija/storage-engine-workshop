@@ -76,20 +76,18 @@ func TestGetsTheAggregatePersistentSlice(t *testing.T) {
 	keyComparator := comparator.StringKeyComparator{}
 
 	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
-
 	key := db.NewSlice([]byte("HDD"))
 	value := db.NewSlice([]byte("Hard disk"))
 
 	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
 
-	persistentSlice := sentinelNode.AllKeys(func(key db.Slice) {})
-	persistentKey, persistentValue := db.NewPersistentSliceKeyValuePair(persistentSlice.GetPersistentContents())
+	keyValuePairs := sentinelNode.AllKeyValues()
 
-	if persistentKey.GetSlice().AsString() != key.AsString() {
-		t.Fatalf("Expected persistent key to be %v received %v", key.AsString(), persistentKey.GetSlice().AsString())
+	if keyValuePairs[0].Key.AsString() != key.AsString() {
+		t.Fatalf("Expected persistent key to be %v received %v", key.AsString(), keyValuePairs[0].Key.AsString())
 	}
 
-	if persistentValue.GetSlice().AsString() != value.AsString() {
-		t.Fatalf("Expected persistent value to be %v received %v", value.AsString(), persistentValue.GetSlice().AsString())
+	if keyValuePairs[0].Value.AsString() != value.AsString() {
+		t.Fatalf("Expected persistent value to be %v received %v", value.AsString(), keyValuePairs[0].Value.AsString())
 	}
 }

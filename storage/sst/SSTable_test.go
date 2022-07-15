@@ -40,6 +40,8 @@ func TestCreatesSSTableAndPutsKeysInBloomFilter(t *testing.T) {
 	defer os.RemoveAll(directory)
 
 	ssTable, _ := NewSSTableFrom(memTable, directory)
+	_ = ssTable.Write()
+
 	contains := ssTable.bloomFilter.Has(db.NewSlice([]byte("SDD")))
 
 	if contains == false {
