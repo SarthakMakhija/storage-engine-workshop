@@ -43,9 +43,9 @@
 22. Establish the relationship between SSTable and bloom filter on restart
    pending
 23. Make PersistentSlice specific to WAL
-   pending
+   done
 24. Introduce new persistent slice like abstraction for SSTable encoded key/value
-   pending
+   done
 
 Questions
 1. Do we need page aligned writes for WAL?
