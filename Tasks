@@ -21,7 +21,7 @@
 11. Implement flushing in SSTable
    done
 12. Implement read from SSTable
-   pending
+   done
 13. Implement a bloom filter without reference to SSTable
    done
 14. Implement bloom filter with reference to SSTable
