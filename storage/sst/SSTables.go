@@ -50,7 +50,7 @@ func (ssTables *SSTables) NewSSTable(memTable *memory.MemTable) (*SSTable, error
 	return ssTable, nil
 }
 
-func (ssTables SSTables) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
+func (ssTables *SSTables) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
 	for index := len(ssTables.tables) - 1; index >= 0; index-- {
 		table := ssTables.tables[index]
 		if table.bloomFilter.Has(key) {
@@ -60,4 +60,12 @@ func (ssTables SSTables) Get(key db.Slice, keyComparator comparator.KeyComparato
 		}
 	}
 	return db.GetResult{Exists: false}
+}
+
+func (ssTables *SSTables) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparator) db.MultiGetResult {
+	response := db.MultiGetResult{}
+	for _, key := range keys {
+		response.Add(ssTables.Get(key, keyComparator))
+	}
+	return response
 }

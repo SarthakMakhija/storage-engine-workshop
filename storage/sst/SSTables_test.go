@@ -127,7 +127,7 @@ func TestGetNonExistentKeyFromSSTableContainingMultipleKeyValues(t *testing.T) {
 	}
 }
 
-func TestGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
+func TestMultiGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
 	directory := tempDirectory()
 	ssTables, _ := NewSSTables(directory)
 	defer os.RemoveAll(directory)
@@ -146,16 +146,25 @@ func TestGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
 	ssTableB, _ := ssTables.NewSSTable(memTableB)
 	_ = ssTableB.Write()
 
-	requestedKeyValuePairs := []db.KeyValuePair{
-		{db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk"))},
-		{db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state"))},
-		{db.NewSlice([]byte("PMEM")), db.NewSlice([]byte("Persistent memory"))},
-		{db.NewSlice([]byte("NVMe")), db.NewSlice([]byte("Non volatile media"))},
+	keys := []db.Slice{
+		db.NewSlice([]byte("HDD")),
+		db.NewSlice([]byte("SDD")),
+		db.NewSlice([]byte("PMEM")),
+		db.NewSlice([]byte("NVMe")),
 	}
-	for _, pair := range requestedKeyValuePairs {
-		getResult := ssTables.Get(pair.Key, comparator.StringKeyComparator{})
-		if getResult.Value.AsString() != pair.Value.AsString() {
-			t.Fatalf("Expected value to be %v, received %v", pair.Value.AsString(), getResult.Value.AsString())
+	expected := []db.GetResult{
+		{Value: db.NewSlice([]byte("Hard disk")), Exists: true},
+		{Value: db.NewSlice([]byte("Solid state")), Exists: true},
+		{Value: db.NewSlice([]byte("Persistent memory")), Exists: true},
+		{Value: db.NewSlice([]byte("Non volatile media")), Exists: true},
+	}
+
+	multiGetResult := ssTables.MultiGet(keys, comparator.StringKeyComparator{})
+	allGetResults := multiGetResult.Values
+
+	for index, e := range expected {
+		if e.Value.AsString() != allGetResults[index].Value.AsString() {
+			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
 		}
 	}
 }
