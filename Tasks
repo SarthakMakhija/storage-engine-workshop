@@ -25,8 +25,8 @@
 13. Implement a bloom filter without reference to SSTable
    done
 14. Implement bloom filter with reference to SSTable
-   pending
-15. Implement a get in SSTable that uses index block to read a key
+   done
+15. Implement a get & multiGet in SSTable that uses index block to read a key
    done
 16. Implement end to end put and get the involves - memtable/bloom filter and SSTable (via test)
    done
@@ -54,3 +54,60 @@ No
 Not needed
 3. What if the size of persistent slice is more than page size in WAL?
 NA
+
+
+1) People who are interested in building a storage engine
+2) People who are into scaling the databases
+
+Day1 - 3 hours
+    What is storage engine?
+    Forms of IO
+        - standard IO
+        - concept of page
+        - memory mapping
+    Read and write patterns
+        - Sequential
+        - Random
+    Data structures for storage engine
+        - B+Tree
+        - LSM Tree
+    RUM conjecture
+    Let's build LSM Tree
+        - WAL log (code)
+        - Adding segments (code)
+    Introducing Skip-list
+
+Day2 - 3 hours
+    Revision
+    Introducing Memtable
+    Building Memtable (code)
+        - put
+        - get
+        - multiGet
+    Introducing SSTable
+    Converting Memtable to SSTable (code)
+    Introducing Bloom filter
+        - Writing a bloom filter (code)
+        - Attaching bloom filter to an SSTable (code)
+
+Day3 - 4 hours
+    Revision
+    Searching in SSTable (code)
+        - Bloom filter revision
+        - Adding an index block to SSTable
+    Implementing Concurrency (code)
+        - Understanding single writer and multiple reader pattern
+        - Singular update queue pattern
+    Adding a Db abstraction to connect all the pieces (code)
+        - WAL
+        - Memtable
+        - Bloom filter
+        - SSTable
+    Implementing transactions (code) / (theory depending on the time left)
+    How to measure performance (code)
+        - Benchmark
+        - google performance profiler
+        - perf (Linux)
+    Conclusion??
+
+
