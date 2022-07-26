@@ -54,22 +54,24 @@ func (node *Node) Get(key model.Slice, keyComparator comparator.KeyComparator) m
 	return model.GetResult{Key: key, Value: model.NilSlice(), Exists: false}
 }
 
-func (node *Node) MultiGet(keys []model.Slice, keyComparator comparator.KeyComparator) model.MultiGetResult {
+func (node *Node) MultiGet(keys []model.Slice, keyComparator comparator.KeyComparator) (model.MultiGetResult, []model.Slice) {
 	sort.SliceStable(keys, func(i, j int) bool {
 		return keyComparator.Compare(keys[i], keys[j]) < 0
 	})
 	currentNode := node
 	response := model.MultiGetResult{}
+	var missingKeys []model.Slice
+
 	for _, key := range keys {
 		targetNode, ok := currentNode.nodeMatching(key, keyComparator)
 		if ok {
 			response.Add(model.GetResult{Key: key, Value: targetNode.value, Exists: ok})
 			currentNode = targetNode
 		} else {
-			response.Add(model.GetResult{Key: key, Value: model.NilSlice(), Exists: false})
+			missingKeys = append(missingKeys, key)
 		}
 	}
-	return response
+	return response, missingKeys
 }
 
 func (node *Node) AllKeyValues() []model.KeyValuePair {

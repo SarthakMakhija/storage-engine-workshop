@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"reflect"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"testing"
@@ -40,19 +41,24 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 		model.NewSlice([]byte("SDD")),
 		model.NewSlice([]byte("PMEM")),
 	}
-	multiGetResult := memTable.MultiGet(keys)
+	multiGetResult, missingKeys := memTable.MultiGet(keys)
 	allGetResults := multiGetResult.Values
 
 	expected := []model.GetResult{
 		{Value: model.NewSlice([]byte("Hard disk")), Exists: true},
-		{Value: model.NilSlice(), Exists: false},
 		{Value: model.NewSlice([]byte("Solid state")), Exists: true},
+	}
+	expectedMissing := []model.Slice{
+		model.NewSlice([]byte("PMEM")),
 	}
 
 	for index, e := range expected {
 		if e.Value.AsString() != allGetResults[index].Value.AsString() {
 			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
 		}
+	}
+	if !reflect.DeepEqual(missingKeys, expectedMissing) {
+		t.Fatalf("Expected missing keys to be %v, received %v", missingKeys, expectedMissing)
 	}
 }
 

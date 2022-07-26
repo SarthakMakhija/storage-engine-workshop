@@ -70,25 +70,31 @@ func (workspace *Workspace) get(key model.Slice) model.GetResult {
 }
 
 func (workspace *Workspace) multiGet(keys []model.Slice) []model.GetResult {
-	memTables := []*memory.MemTable{workspace.activeMemTable, workspace.inactiveMemTable}
-
 	index, allGetResults := 0, make([]model.GetResult, len(keys))
-	var pendingKeys []model.Slice
 
-	for _, memTable := range memTables {
-		if memTable != nil {
-			for _, getResult := range memTable.MultiGet(keys).Values {
-				if getResult.Exists {
-					allGetResults[index] = getResult
-					index = index + 1
-				} else {
-					pendingKeys = append(pendingKeys, getResult.Key)
-				}
+	buildResult := func(multiGetResult model.MultiGetResult) {
+		for _, getResult := range multiGetResult.Values {
+			if getResult.Exists {
+				allGetResults[index] = getResult
+				index = index + 1
 			}
 		}
 	}
-	if len(pendingKeys) > 0 {
-		for _, getResult := range workspace.ssTables.MultiGet(pendingKeys, workspace.configuration.keyComparator).Values {
+	multiGetIn := func(memTable *memory.MemTable, keys []model.Slice) []model.Slice {
+		if memTable != nil {
+			multiGetResult, missingKeys := workspace.activeMemTable.MultiGet(keys)
+			buildResult(multiGetResult)
+			return missingKeys
+		}
+		return []model.Slice{}
+	}
+
+	missingKeys := multiGetIn(workspace.activeMemTable, keys)
+	missingKeys = multiGetIn(workspace.inactiveMemTable, missingKeys)
+
+	if len(missingKeys) > 0 {
+		getResults := workspace.ssTables.MultiGet(missingKeys, workspace.configuration.keyComparator).Values
+		for _, getResult := range getResults {
 			allGetResults[index] = getResult
 			index = index + 1
 		}

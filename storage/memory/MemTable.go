@@ -36,7 +36,7 @@ func (memTable *MemTable) Get(key model.Slice) model.GetResult {
 	return memTable.head.Get(key, memTable.keyComparator)
 }
 
-func (memTable *MemTable) MultiGet(keys []model.Slice) model.MultiGetResult {
+func (memTable *MemTable) MultiGet(keys []model.Slice) (model.MultiGetResult, []model.Slice) {
 	return memTable.head.MultiGet(keys, memTable.keyComparator)
 }
 

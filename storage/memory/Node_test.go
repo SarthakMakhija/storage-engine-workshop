@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"reflect"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/utils"
@@ -41,7 +42,35 @@ func TestPutAKeyValueAndAssertsItsExistenceInNode(t *testing.T) {
 	}
 }
 
-func TestPutsKeyValuesAndDoesMultiGetByKeyInNode(t *testing.T) {
+func TestPutsKeyValuesAndDoesMultiGetByKeysInNode(t *testing.T) {
+	const maxLevel = 8
+	keyComparator := comparator.StringKeyComparator{}
+
+	sentinelNode := NewNode(model.NilSlice(), model.NilSlice(), maxLevel)
+
+	sentinelNode.Put(model.NewSlice([]byte("HDD")), model.NewSlice([]byte("Hard disk")), keyComparator, utils.NewLevelGenerator(maxLevel))
+	sentinelNode.Put(model.NewSlice([]byte("SDD")), model.NewSlice([]byte("Solid state")), keyComparator, utils.NewLevelGenerator(maxLevel))
+
+	keys := []model.Slice{
+		model.NewSlice([]byte("HDD")),
+		model.NewSlice([]byte("SDD")),
+	}
+	multiGetResult, _ := sentinelNode.MultiGet(keys, keyComparator)
+	allGetResults := multiGetResult.Values
+
+	expected := []model.GetResult{
+		{Value: model.NewSlice([]byte("Hard disk")), Exists: true},
+		{Value: model.NewSlice([]byte("Solid state")), Exists: true},
+	}
+
+	for index, e := range expected {
+		if e.Value.AsString() != allGetResults[index].Value.AsString() {
+			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
+		}
+	}
+}
+
+func TestPutsKeyValuesAndDoesMultiGetByKeysWithMissingKeysInNode(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 
@@ -55,19 +84,24 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNode(t *testing.T) {
 		model.NewSlice([]byte("SDD")),
 		model.NewSlice([]byte("PMEM")),
 	}
-	multiGetResult := sentinelNode.MultiGet(keys, keyComparator)
+	multiGetResult, missingKeys := sentinelNode.MultiGet(keys, keyComparator)
 	allGetResults := multiGetResult.Values
 
 	expected := []model.GetResult{
 		{Value: model.NewSlice([]byte("Hard disk")), Exists: true},
-		{Value: model.NilSlice(), Exists: false},
 		{Value: model.NewSlice([]byte("Solid state")), Exists: true},
+	}
+	expectedMissing := []model.Slice{
+		model.NewSlice([]byte("PMEM")),
 	}
 
 	for index, e := range expected {
 		if e.Value.AsString() != allGetResults[index].Value.AsString() {
 			t.Fatalf("Expected %v, received %v", e.Value.AsString(), allGetResults[index].Value.AsString())
 		}
+	}
+	if !reflect.DeepEqual(missingKeys, expectedMissing) {
+		t.Fatalf("Expected missing keys to be %v, received %v", missingKeys, expectedMissing)
 	}
 }
 
