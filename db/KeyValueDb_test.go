@@ -8,6 +8,7 @@ import (
 	"storage-engine-workshop/storage/comparator"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func tempDirectory() string {
@@ -18,9 +19,9 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
+func TestPut1000KeysValuesAndGetByKeys(t *testing.T) {
 	const segmentMaxSizeBytes uint64 = 10 * 1024 * 1024
-	const bufferMaxSizeBytes uint64 = 512 * 1024
+	const bufferMaxSizeBytes uint64 = 512
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
@@ -35,11 +36,13 @@ func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
 	db, _ := NewKeyValueDb(configuration)
 
-	for count := 1; count <= 500; count++ {
+	for count := 1; count <= 1000; count++ {
 		_ = db.Put(keyUsing(count), valueUsing(count))
 	}
 
-	for count := 1; count <= 500; count++ {
+	allowFlushingSSTable()
+
+	for count := 1; count <= 1000; count++ {
 		getResult := db.Get(keyUsing(count))
 		expectedValue := valueUsing(count)
 
@@ -47,4 +50,8 @@ func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 			t.Fatalf("Expected %v, received %v", expectedValue.AsString(), getResult.Value.AsString())
 		}
 	}
+}
+
+func allowFlushingSSTable() {
+	time.Sleep(100 * time.Millisecond)
 }

@@ -138,6 +138,7 @@ func TestMultiGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
 
 	ssTableA, _ := ssTables.NewSSTable(memTableA)
 	_ = ssTableA.Write()
+	ssTables.AddNew(ssTableA)
 
 	memTableB := memory.NewMemTable(10, comparator.StringKeyComparator{})
 	memTableB.Put(model.NewSlice([]byte("PMEM")), model.NewSlice([]byte("Persistent memory")))
@@ -145,6 +146,7 @@ func TestMultiGetsFromSSTablesBasedOnBloomFilter(t *testing.T) {
 
 	ssTableB, _ := ssTables.NewSSTable(memTableB)
 	_ = ssTableB.Write()
+	ssTables.AddNew(ssTableB)
 
 	keys := []model.Slice{
 		model.NewSlice([]byte("HDD")),

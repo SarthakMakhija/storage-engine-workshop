@@ -59,18 +59,18 @@ func (indexBlock *IndexBlock) GetKeyOffset(key model.Slice, keyComparator compar
 
 func (indexBlock *IndexBlock) readIndexBlock() ([]byte, error) {
 	size, _ := indexBlock.store.Size()
-	offsetContainingIndexBlockSize := size - int64(ReservedOffsetSize)
-	_, err := indexBlock.store.SeekFromBeginning(offsetContainingIndexBlockSize)
+	offsetContainingIndexBegin := size - int64(ReservedOffsetSize)
+	_, err := indexBlock.store.SeekFromBeginning(offsetContainingIndexBegin)
 	if err != nil {
 		return nil, err
 	}
 	indexBlockBeginOffsetBytes := make([]byte, int(ReservedOffsetSize))
-	_, err = indexBlock.store.ReadAt(indexBlockBeginOffsetBytes, offsetContainingIndexBlockSize)
+	_, err = indexBlock.store.ReadAt(indexBlockBeginOffsetBytes, offsetContainingIndexBegin)
 	if err != nil {
 		return nil, err
 	}
-	indexBlockBeginOffset := bigEndian.Uint64(indexBlockBeginOffsetBytes)
-	blockBytes := make([]byte, offsetContainingIndexBlockSize-int64(indexBlockBeginOffset))
+	indexBlockBeginOffset := bigEndian.Uint64(indexBlockBeginOffsetBytes[0:])
+	blockBytes := make([]byte, offsetContainingIndexBegin-int64(indexBlockBeginOffset))
 	_, err = indexBlock.store.ReadAt(blockBytes, int64(indexBlockBeginOffset))
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (indexBlock *IndexBlock) marshal(key model.Slice, keyBeginOffset int64) []b
 	bytes := make([]byte, actualTotalSize)
 	index := 0
 
-	bigEndian.PutUint32(bytes, uint32(key.Size()))
+	bigEndian.PutUint32(bytes[index:], uint32(key.Size()))
 	index = index + int(reservedKeySize)
 
 	bigEndian.PutUint64(bytes[index:], uint64(keyBeginOffset))

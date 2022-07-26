@@ -41,6 +41,7 @@ func (memTableWriter *MemTableWriter) Write() <-chan MemTableWriteStatus {
 			writeErrorToChannel(err, response)
 			return
 		}
+		memTableWriter.ssTables.AddNew(memTableWriter.ssTable)
 		writeSuccessToChannel(response)
 	}()
 	return response
