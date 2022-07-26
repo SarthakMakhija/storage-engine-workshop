@@ -5,8 +5,7 @@ import (
 )
 
 type KeyValueDb struct {
-	configuration Configuration
-	executor      *RequestExecutor
+	executor *RequestExecutor
 }
 
 func NewKeyValueDb(configuration Configuration) (*KeyValueDb, error) {
@@ -15,8 +14,7 @@ func NewKeyValueDb(configuration Configuration) (*KeyValueDb, error) {
 		return nil, err
 	}
 	return &KeyValueDb{
-		configuration: configuration,
-		executor:      newRequestExecutor(workSpace),
+		executor: newRequestExecutor(workSpace),
 	}, nil
 }
 
