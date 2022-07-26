@@ -18,7 +18,7 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
+func TestPut50KeysValuesAndGetByKeys(t *testing.T) {
 	const segmentMaxSizeBytes uint64 = 32
 	const bufferMaxSizeBytes uint64 = 1024
 
@@ -35,11 +35,11 @@ func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
 	db, _ := NewKeyValueDb(configuration)
 
-	for count := 1; count <= 500; count++ {
+	for count := 1; count <= 50; count++ {
 		_ = db.Put(keyUsing(count), valueUsing(count))
 	}
 
-	for count := 1; count <= 500; count++ {
+	for count := 1; count <= 50; count++ {
 		getResult := db.Get(keyUsing(count))
 		expectedValue := valueUsing(count)
 

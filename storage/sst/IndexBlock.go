@@ -1,7 +1,6 @@
 package sst
 
 import (
-	"fmt"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"unsafe"
@@ -71,8 +70,6 @@ func (indexBlock *IndexBlock) readIndexBlock() ([]byte, error) {
 		return nil, err
 	}
 	indexBlockBeginOffset := bigEndian.Uint64(indexBlockBeginOffsetBytes)
-	fmt.Println("offsetContainingIndexBlockSize ", offsetContainingIndexBlockSize)
-	fmt.Println("int64(indexBlockBeginOffset) ", int64(indexBlockBeginOffset))
 	blockBytes := make([]byte, offsetContainingIndexBlockSize-int64(indexBlockBeginOffset))
 	_, err = indexBlock.store.ReadAt(blockBytes, int64(indexBlockBeginOffset))
 	if err != nil {
