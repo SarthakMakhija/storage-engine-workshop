@@ -1,15 +1,15 @@
 package memory
 
 import (
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"testing"
 )
 
 func TestPutAKeyValueAndGetByKeyInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
 	getResult := memTable.Get(key)
@@ -20,8 +20,8 @@ func TestPutAKeyValueAndGetByKeyInMemTable(t *testing.T) {
 
 func TestPutAKeyValueAndAssertsItsExistenceInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
 	getResult := memTable.Get(key)
@@ -32,21 +32,21 @@ func TestPutAKeyValueAndAssertsItsExistenceInMemTable(t *testing.T) {
 
 func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
-	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
+	memTable.Put(model.NewSlice([]byte("HDD")), model.NewSlice([]byte("Hard disk")))
+	memTable.Put(model.NewSlice([]byte("SDD")), model.NewSlice([]byte("Solid state")))
 
-	keys := []db.Slice{
-		db.NewSlice([]byte("HDD")),
-		db.NewSlice([]byte("SDD")),
-		db.NewSlice([]byte("PMEM")),
+	keys := []model.Slice{
+		model.NewSlice([]byte("HDD")),
+		model.NewSlice([]byte("SDD")),
+		model.NewSlice([]byte("PMEM")),
 	}
 	multiGetResult := memTable.MultiGet(keys)
 	allGetResults := multiGetResult.Values
 
-	expected := []db.GetResult{
-		{Value: db.NewSlice([]byte("Hard disk")), Exists: true},
-		{Value: db.NilSlice(), Exists: false},
-		{Value: db.NewSlice([]byte("Solid state")), Exists: true},
+	expected := []model.GetResult{
+		{Value: model.NewSlice([]byte("Hard disk")), Exists: true},
+		{Value: model.NilSlice(), Exists: false},
+		{Value: model.NewSlice([]byte("Solid state")), Exists: true},
 	}
 
 	for index, e := range expected {
@@ -58,8 +58,8 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNodeInMemTable(t *testing.T) {
 
 func TestPutAKeyValueAndGetsAllKeyValues(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
 	keyValuePairs := memTable.AllKeyValues()
@@ -75,8 +75,8 @@ func TestPutAKeyValueAndGetsAllKeyValues(t *testing.T) {
 func TestPutAKeyValueAndGetsTheTotalKeysInMemTable(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
 
-	memTable.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")))
-	memTable.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")))
+	memTable.Put(model.NewSlice([]byte("HDD")), model.NewSlice([]byte("Hard disk")))
+	memTable.Put(model.NewSlice([]byte("SDD")), model.NewSlice([]byte("Solid state")))
 
 	totalKeys := memTable.TotalKeys()
 
@@ -87,14 +87,14 @@ func TestPutAKeyValueAndGetsTheTotalKeysInMemTable(t *testing.T) {
 
 func TestReturnsTheTotalMemTableSize(t *testing.T) {
 	memTable := NewMemTable(10, comparator.StringKeyComparator{})
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
 	size := memTable.TotalSize()
 	expected := key.Size() + value.Size()
 
-	if size != uint32(expected) {
+	if size != uint64(expected) {
 		t.Fatalf("Expected total memtable size to be %v, received %v", expected, size)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/spaolacci/murmur3"
 	"math"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"unsafe"
 )
 
@@ -44,7 +44,7 @@ func newBloomFilter(capacity int, dataSize int, falsePositiveRate float64, fileN
 	}, nil
 }
 
-func (bloomFilter *BloomFilter) Put(key db.Slice) error {
+func (bloomFilter *BloomFilter) Put(key model.Slice) error {
 	indices := bloomFilter.keyIndices(key)
 
 	for index := 0; index < len(indices); index++ {
@@ -57,7 +57,7 @@ func (bloomFilter *BloomFilter) Put(key db.Slice) error {
 	return nil
 }
 
-func (bloomFilter *BloomFilter) Has(key db.Slice) bool {
+func (bloomFilter *BloomFilter) Has(key model.Slice) bool {
 	indices := bloomFilter.keyIndices(key)
 
 	for index := 0; index < len(indices); index++ {
@@ -86,7 +86,7 @@ func (bloomFilter *BloomFilter) bitPositionInByte(keyIndex uint64) (uint64, byte
 }
 
 // Use the hash function to get all keyIndices of the given key
-func (bloomFilter *BloomFilter) keyIndices(key db.Slice) []uint64 {
+func (bloomFilter *BloomFilter) keyIndices(key model.Slice) []uint64 {
 	indices := make([]uint64, 0, bloomFilter.numberOfHashFunctions)
 	runHash := func(key []byte, seed uint32) uint64 {
 		hash, _ := murmur3.Sum128WithSeed(key, seed)

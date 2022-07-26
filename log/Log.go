@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 	"sort"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 )
 
 type WAL struct {
@@ -66,7 +66,7 @@ func (log *WAL) ReadAll() ([]PutCommand, error) {
 		putCommands := make([]PutCommand, len(keyValuePairs))
 		for index, pair := range keyValuePairs {
 			putCommands[index] =
-				NewPutCommand(db.KeyValuePair{Key: pair.Key.GetSlice(), Value: pair.Value.GetSlice()})
+				NewPutCommand(model.KeyValuePair{Key: pair.Key.GetSlice(), Value: pair.Value.GetSlice()})
 		}
 		return putCommands
 	}

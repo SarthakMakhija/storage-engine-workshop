@@ -1,4 +1,4 @@
-package db
+package model
 
 type KeyValuePair struct {
 	Key   Slice

@@ -16,22 +16,16 @@ type MemTableWriteStatus struct {
 }
 
 type MemTableWriter struct {
-	memTable  *memory.MemTable
-	ssTables  *sst.SSTables
-	ssTable   *sst.SSTable
-	directory string
+	memTable *memory.MemTable
+	ssTables *sst.SSTables
+	ssTable  *sst.SSTable
 }
 
-func NewMemTableWriter(memTable *memory.MemTable, directory string) (*MemTableWriter, error) {
-	ssTables, err := sst.NewSSTables(directory)
-	if err != nil {
-		return nil, err
-	}
+func NewMemTableWriter(memTable *memory.MemTable, ssTables *sst.SSTables) *MemTableWriter {
 	return &MemTableWriter{
-		memTable:  memTable,
-		directory: directory,
-		ssTables:  ssTables,
-	}, nil
+		memTable: memTable,
+		ssTables: ssTables,
+	}
 }
 
 func (memTableWriter *MemTableWriter) Write() <-chan MemTableWriteStatus {

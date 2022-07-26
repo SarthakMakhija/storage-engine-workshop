@@ -2,7 +2,7 @@ package filter
 
 import (
 	"os"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"strconv"
 	"testing"
 )
@@ -17,8 +17,8 @@ func TestAdds500KeysAndChecksForTheirPositiveExistence(t *testing.T) {
 		FileNamePrefix: "1",
 	})
 
-	keyUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 	}
 	for count := 1; count <= 500; count++ {
 		_ = bloomFilter.Put(keyUsing(count))
@@ -42,8 +42,8 @@ func TestAdds500KeysAndChecksForTheExistenceOfMissingKeys(t *testing.T) {
 		FileNamePrefix: "2",
 	})
 
-	keyUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 	}
 	for count := 1; count <= 500; count++ {
 		_ = bloomFilter.Put(keyUsing(count))

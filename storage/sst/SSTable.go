@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
@@ -13,7 +13,7 @@ import (
 
 type SSTable struct {
 	store         *Store
-	keyValuePairs []db.KeyValuePair
+	keyValuePairs []model.KeyValuePair
 	bloomFilter   *filter.BloomFilter
 }
 
@@ -51,20 +51,20 @@ func (ssTable *SSTable) Write() error {
 	return nil
 }
 
-func (ssTable *SSTable) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
+func (ssTable *SSTable) Get(key model.Slice, keyComparator comparator.KeyComparator) model.GetResult {
 	indexBlock := NewIndexBlock(ssTable.store)
 	keyOffset, err := indexBlock.GetKeyOffset(key, keyComparator)
 	if err != nil {
-		return db.GetResult{Exists: false}
+		return model.GetResult{Key: key, Exists: false}
 	}
 	if keyOffset == -1 {
-		return db.GetResult{Exists: false}
+		return model.GetResult{Key: key, Exists: false}
 	}
 	_, resultValue, err := ssTable.readAt(keyOffset)
 	if err != nil {
-		return db.GetResult{Exists: false}
+		return model.GetResult{Key: key, Exists: false}
 	}
-	return db.GetResult{Value: resultValue.GetSlice(), Exists: true}
+	return model.GetResult{Key: key, Value: resultValue.GetSlice(), Exists: true}
 }
 
 func (ssTable *SSTable) readAt(offset int64) (PersistentSSTableSlice, PersistentSSTableSlice, error) {

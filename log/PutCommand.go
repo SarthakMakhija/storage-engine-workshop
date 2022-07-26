@@ -1,27 +1,27 @@
 package log
 
 import (
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 )
 
 type PutCommand struct {
-	keyValuePair db.KeyValuePair
+	keyValuePair model.KeyValuePair
 }
 
-func NewPutCommand(pair db.KeyValuePair) PutCommand {
+func NewPutCommand(pair model.KeyValuePair) PutCommand {
 	return PutCommand{
 		keyValuePair: pair,
 	}
 }
 
-func NewPutCommandWithKeyValue(key db.Slice, value db.Slice) PutCommand {
-	return NewPutCommand(db.KeyValuePair{Key: key, Value: value})
+func NewPutCommandWithKeyValue(key model.Slice, value model.Slice) PutCommand {
+	return NewPutCommand(model.KeyValuePair{Key: key, Value: value})
 }
 
-func (putCommand PutCommand) key() db.Slice {
+func (putCommand PutCommand) key() model.Slice {
 	return putCommand.keyValuePair.Key
 }
 
-func (putCommand PutCommand) value() db.Slice {
+func (putCommand PutCommand) value() model.Slice {
 	return putCommand.keyValuePair.Value
 }

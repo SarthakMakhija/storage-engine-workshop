@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/utils"
 	"testing"
@@ -11,10 +11,10 @@ func TestPutsAKeyValueAndGetByKeyInNode(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 
-	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
+	sentinelNode := NewNode(model.NilSlice(), model.NilSlice(), maxLevel)
 
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 
 	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
 
@@ -28,10 +28,10 @@ func TestPutAKeyValueAndAssertsItsExistenceInNode(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 
-	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
+	sentinelNode := NewNode(model.NilSlice(), model.NilSlice(), maxLevel)
 
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 
 	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
 
@@ -45,23 +45,23 @@ func TestPutsKeyValuesAndDoesMultiGetByKeyInNode(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 
-	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
+	sentinelNode := NewNode(model.NilSlice(), model.NilSlice(), maxLevel)
 
-	sentinelNode.Put(db.NewSlice([]byte("HDD")), db.NewSlice([]byte("Hard disk")), keyComparator, utils.NewLevelGenerator(maxLevel))
-	sentinelNode.Put(db.NewSlice([]byte("SDD")), db.NewSlice([]byte("Solid state")), keyComparator, utils.NewLevelGenerator(maxLevel))
+	sentinelNode.Put(model.NewSlice([]byte("HDD")), model.NewSlice([]byte("Hard disk")), keyComparator, utils.NewLevelGenerator(maxLevel))
+	sentinelNode.Put(model.NewSlice([]byte("SDD")), model.NewSlice([]byte("Solid state")), keyComparator, utils.NewLevelGenerator(maxLevel))
 
-	keys := []db.Slice{
-		db.NewSlice([]byte("HDD")),
-		db.NewSlice([]byte("SDD")),
-		db.NewSlice([]byte("PMEM")),
+	keys := []model.Slice{
+		model.NewSlice([]byte("HDD")),
+		model.NewSlice([]byte("SDD")),
+		model.NewSlice([]byte("PMEM")),
 	}
 	multiGetResult := sentinelNode.MultiGet(keys, keyComparator)
 	allGetResults := multiGetResult.Values
 
-	expected := []db.GetResult{
-		{Value: db.NewSlice([]byte("Hard disk")), Exists: true},
-		{Value: db.NilSlice(), Exists: false},
-		{Value: db.NewSlice([]byte("Solid state")), Exists: true},
+	expected := []model.GetResult{
+		{Value: model.NewSlice([]byte("Hard disk")), Exists: true},
+		{Value: model.NilSlice(), Exists: false},
+		{Value: model.NewSlice([]byte("Solid state")), Exists: true},
 	}
 
 	for index, e := range expected {
@@ -75,9 +75,9 @@ func TestGetsAllKeyValues(t *testing.T) {
 	const maxLevel = 8
 	keyComparator := comparator.StringKeyComparator{}
 
-	sentinelNode := NewNode(db.NilSlice(), db.NilSlice(), maxLevel)
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	sentinelNode := NewNode(model.NilSlice(), model.NilSlice(), maxLevel)
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 
 	sentinelNode.Put(key, value, keyComparator, utils.NewLevelGenerator(maxLevel))
 

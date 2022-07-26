@@ -2,7 +2,7 @@ package log
 
 import (
 	"encoding/binary"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"unsafe"
 )
 
@@ -22,7 +22,7 @@ func EmptyPersistentLogSlice() PersistentLogSlice {
 	return emptyPersistentLogSlice
 }
 
-func NewPersistentLogSlice(keyValuePair db.KeyValuePair) PersistentLogSlice {
+func NewPersistentLogSlice(keyValuePair model.KeyValuePair) PersistentLogSlice {
 	return marshal(keyValuePair)
 }
 
@@ -34,8 +34,8 @@ func (persistentLogSlice PersistentLogSlice) GetPersistentContents() []byte {
 	return persistentLogSlice.contents
 }
 
-func (persistentLogSlice PersistentLogSlice) GetSlice() db.Slice {
-	return db.NewSlice(persistentLogSlice.GetPersistentContents())
+func (persistentLogSlice PersistentLogSlice) GetSlice() model.Slice {
+	return model.NewSlice(persistentLogSlice.GetPersistentContents())
 }
 
 func (persistentLogSlice PersistentLogSlice) Size() int {
@@ -50,7 +50,7 @@ func ActualTotalSize(bytes []byte) uint32 {
 	return bigEndian.Uint32(bytes)
 }
 
-func marshal(keyValuePair db.KeyValuePair) PersistentLogSlice {
+func marshal(keyValuePair model.KeyValuePair) PersistentLogSlice {
 	reservedTotalSize, reservedKeySize := reservedTotalSize, reservedKeySize
 	actualTotalSize :=
 		len(keyValuePair.Key.GetRawContent()) +

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/filter"
 	"storage-engine-workshop/storage/memory"
@@ -50,7 +50,7 @@ func (ssTables *SSTables) NewSSTable(memTable *memory.MemTable) (*SSTable, error
 	return ssTable, nil
 }
 
-func (ssTables *SSTables) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
+func (ssTables *SSTables) Get(key model.Slice, keyComparator comparator.KeyComparator) model.GetResult {
 	for index := len(ssTables.tables) - 1; index >= 0; index-- {
 		table := ssTables.tables[index]
 		if table.bloomFilter.Has(key) {
@@ -59,11 +59,11 @@ func (ssTables *SSTables) Get(key db.Slice, keyComparator comparator.KeyComparat
 			}
 		}
 	}
-	return db.GetResult{Exists: false}
+	return model.GetResult{Exists: false}
 }
 
-func (ssTables *SSTables) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparator) db.MultiGetResult {
-	response := db.MultiGetResult{}
+func (ssTables *SSTables) MultiGet(keys []model.Slice, keyComparator comparator.KeyComparator) model.MultiGetResult {
+	response := model.MultiGetResult{}
 	for _, key := range keys {
 		response.Add(ssTables.Get(key, keyComparator))
 	}

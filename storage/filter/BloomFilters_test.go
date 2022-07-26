@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"strconv"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistence(t *testing.T) {
 		FileNamePrefix: "1",
 	})
 
-	key := db.NewSlice([]byte("Company"))
+	key := model.NewSlice([]byte("Company"))
 	_ = bloomFilter.Put(key)
 
 	if bloomFilter.Has(key) == false {
@@ -45,11 +45,11 @@ func TestAddsAKeyWithBloomFilterAndChecksForTheExistenceOfANonExistingKey(t *tes
 		FileNamePrefix: "2",
 	})
 
-	key := db.NewSlice([]byte("Company"))
+	key := model.NewSlice([]byte("Company"))
 	_ = bloomFilter.Put(key)
 
-	if bloomFilter.Has(db.NewSlice([]byte("Missing"))) == true {
-		t.Fatalf("Expected %v key to be missing but was present", db.NewSlice([]byte("Missing")).AsString())
+	if bloomFilter.Has(model.NewSlice([]byte("Missing"))) == true {
+		t.Fatalf("Expected %v key to be missing but was present", model.NewSlice([]byte("Missing")).AsString())
 	}
 }
 
@@ -63,17 +63,17 @@ func TestAddsAKeyWithBloomFilterAndChecksForItsPositiveExistenceSimulatingAResta
 		FileNamePrefix: "1",
 	})
 
-	_ = aBloomFilter.Put(db.NewSlice([]byte("Company")))
-	_ = aBloomFilter.Put(db.NewSlice([]byte("State")))
+	_ = aBloomFilter.Put(model.NewSlice([]byte("Company")))
+	_ = aBloomFilter.Put(model.NewSlice([]byte("State")))
 
 	bloomFilters.Close()
 	bloomFiltersAfterRestart, _ := NewBloomFilters(directory, 0.001)
 
-	if bloomFiltersAfterRestart.Has(db.NewSlice([]byte("Company"))) == false {
-		t.Fatalf("Expected key %v to be present but was not", db.NewSlice([]byte("Company")).AsString())
+	if bloomFiltersAfterRestart.Has(model.NewSlice([]byte("Company"))) == false {
+		t.Fatalf("Expected key %v to be present but was not", model.NewSlice([]byte("Company")).AsString())
 	}
-	if bloomFiltersAfterRestart.Has(db.NewSlice([]byte("State"))) == false {
-		t.Fatalf("Expected key %v to be present but was not", db.NewSlice([]byte("State")).AsString())
+	if bloomFiltersAfterRestart.Has(model.NewSlice([]byte("State"))) == false {
+		t.Fatalf("Expected key %v to be present but was not", model.NewSlice([]byte("State")).AsString())
 	}
 }
 
@@ -86,21 +86,21 @@ func TestAddsAKeyWithMultipleBloomFiltersAndChecksForItsPositiveExistenceSimulat
 		Capacity:       2,
 		FileNamePrefix: "1",
 	})
-	_ = aBloomFilter.Put(db.NewSlice([]byte("Key-1")))
-	_ = aBloomFilter.Put(db.NewSlice([]byte("Key-2")))
+	_ = aBloomFilter.Put(model.NewSlice([]byte("Key-1")))
+	_ = aBloomFilter.Put(model.NewSlice([]byte("Key-2")))
 
 	bBloomFilter, _ := bloomFilters.NewBloomFilter(BloomFilterOptions{
 		Capacity:       2,
 		FileNamePrefix: "1",
 	})
-	_ = bBloomFilter.Put(db.NewSlice([]byte("Key-3")))
-	_ = bBloomFilter.Put(db.NewSlice([]byte("Key-4")))
+	_ = bBloomFilter.Put(model.NewSlice([]byte("Key-3")))
+	_ = bBloomFilter.Put(model.NewSlice([]byte("Key-4")))
 
 	bloomFilters.Close()
 	bloomFiltersAfterRestart, _ := NewBloomFilters(directory, 0.001)
 
 	for count := 1; count <= 4; count++ {
-		key := db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+		key := model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 		contains := bloomFiltersAfterRestart.Has(key)
 		if contains == false {
 			t.Fatalf("Expected key %v to be present but was not", key.AsString())

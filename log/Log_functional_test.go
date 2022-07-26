@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"strconv"
 	"testing"
 )
@@ -21,11 +21,11 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	keyUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 	}
-	valueUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	valueUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 
 	var segmentMaxSizeBytes uint64 = 32
@@ -61,11 +61,11 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	keyUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 	}
-	valueUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	valueUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 
 	var segmentMaxSizeBytes uint64 = 32

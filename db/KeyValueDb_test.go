@@ -1,14 +1,28 @@
-package memory
+package db
 
 import (
+	"io/ioutil"
+	"log"
+	"os"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"strconv"
 	"testing"
 )
 
+func tempDirectory() string {
+	dir, err := ioutil.TempDir(".", "db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
+}
+
 func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
-	memTable := NewMemTable(10, comparator.StringKeyComparator{})
+	const segmentMaxSizeBytes uint64 = 32
+	const bufferMaxSizeBytes uint64 = 1024
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
 
 	keyUsing := func(count int) model.Slice {
 		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
@@ -17,12 +31,15 @@ func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 
+	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
+	db, _ := NewKeyValueDb(configuration)
+
 	for count := 1; count <= 500; count++ {
-		memTable.Put(keyUsing(count), valueUsing(count))
+		_ = db.Put(keyUsing(count), valueUsing(count))
 	}
 
 	for count := 1; count <= 500; count++ {
-		getResult := memTable.Get(keyUsing(count))
+		getResult := db.Get(keyUsing(count))
 		expectedValue := valueUsing(count)
 
 		if getResult.Value.AsString() != expectedValue.AsString() {

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"strconv"
 	"strings"
 )
@@ -67,7 +67,7 @@ func (bloomFilters *BloomFilters) Close() {
 	}
 }
 
-func (bloomFilters *BloomFilters) Has(key db.Slice) bool {
+func (bloomFilters *BloomFilters) Has(key model.Slice) bool {
 	for _, bloomFilter := range bloomFilters.filters {
 		if bloomFilter.Has(key) {
 			return true

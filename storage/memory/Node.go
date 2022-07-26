@@ -2,18 +2,18 @@ package memory
 
 import (
 	"sort"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/utils"
 )
 
 type Node struct {
-	key      db.Slice
-	value    db.Slice
+	key      model.Slice
+	value    model.Slice
 	forwards []*Node
 }
 
-func NewNode(key db.Slice, value db.Slice, level int) *Node {
+func NewNode(key model.Slice, value model.Slice, level int) *Node {
 	return &Node{
 		key:      key,
 		value:    value,
@@ -21,7 +21,7 @@ func NewNode(key db.Slice, value db.Slice, level int) *Node {
 	}
 }
 
-func (node *Node) Put(key db.Slice, value db.Slice, keyComparator comparator.KeyComparator, levelGenerator utils.LevelGenerator) bool {
+func (node *Node) Put(key model.Slice, value model.Slice, keyComparator comparator.KeyComparator, levelGenerator utils.LevelGenerator) bool {
 	current := node
 	positions := make([]*Node, len(node.forwards))
 
@@ -46,45 +46,45 @@ func (node *Node) Put(key db.Slice, value db.Slice, keyComparator comparator.Key
 	return false
 }
 
-func (node *Node) Get(key db.Slice, keyComparator comparator.KeyComparator) db.GetResult {
+func (node *Node) Get(key model.Slice, keyComparator comparator.KeyComparator) model.GetResult {
 	node, ok := node.nodeMatching(key, keyComparator)
 	if ok {
-		return db.GetResult{Value: node.value, Exists: ok}
+		return model.GetResult{Key: key, Value: node.value, Exists: ok}
 	}
-	return db.GetResult{Value: db.NilSlice(), Exists: false}
+	return model.GetResult{Key: key, Value: model.NilSlice(), Exists: false}
 }
 
-func (node *Node) MultiGet(keys []db.Slice, keyComparator comparator.KeyComparator) db.MultiGetResult {
+func (node *Node) MultiGet(keys []model.Slice, keyComparator comparator.KeyComparator) model.MultiGetResult {
 	sort.SliceStable(keys, func(i, j int) bool {
 		return keyComparator.Compare(keys[i], keys[j]) < 0
 	})
 	currentNode := node
-	response := db.MultiGetResult{}
+	response := model.MultiGetResult{}
 	for _, key := range keys {
 		targetNode, ok := currentNode.nodeMatching(key, keyComparator)
 		if ok {
-			response.Add(db.GetResult{Value: targetNode.value, Exists: ok})
+			response.Add(model.GetResult{Key: key, Value: targetNode.value, Exists: ok})
 			currentNode = targetNode
 		} else {
-			response.Add(db.GetResult{Value: db.NilSlice(), Exists: false})
+			response.Add(model.GetResult{Key: key, Value: model.NilSlice(), Exists: false})
 		}
 	}
 	return response
 }
 
-func (node *Node) AllKeyValues() []db.KeyValuePair {
+func (node *Node) AllKeyValues() []model.KeyValuePair {
 	level, current := 0, node
-	var pairs []db.KeyValuePair
+	var pairs []model.KeyValuePair
 
 	current = current.forwards[level]
 	for current != nil {
-		pairs = append(pairs, db.KeyValuePair{Key: current.key, Value: current.value})
+		pairs = append(pairs, model.KeyValuePair{Key: current.key, Value: current.value})
 		current = current.forwards[level]
 	}
 	return pairs
 }
 
-func (node *Node) nodeMatching(key db.Slice, keyComparator comparator.KeyComparator) (*Node, bool) {
+func (node *Node) nodeMatching(key model.Slice, keyComparator comparator.KeyComparator) (*Node, bool) {
 	current := node
 	for level := len(node.forwards) - 1; level >= 0; level-- {
 		for current.forwards[level] != nil &&

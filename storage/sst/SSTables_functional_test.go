@@ -2,7 +2,7 @@ package sst
 
 import (
 	"os"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/memory"
 	"strconv"
@@ -14,11 +14,11 @@ func TestCreatesSSTableWith500KeysAndPutsAllKeysInBloomFilter(t *testing.T) {
 	defer os.RemoveAll(directory)
 
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
-	keyUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
 	}
-	valueUsing := func(count int) db.Slice {
-		return db.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	valueUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 	for count := 1; count <= 500; count++ {
 		memTable.Put(keyUsing(count), valueUsing(count))

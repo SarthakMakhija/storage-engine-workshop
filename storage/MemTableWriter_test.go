@@ -4,9 +4,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"storage-engine-workshop/storage/memory"
+	"storage-engine-workshop/storage/sst"
 	"testing"
 )
 
@@ -20,14 +21,15 @@ func tempDirectory() string {
 
 func TestMemTableWriterWithSuccessAsStatus(t *testing.T) {
 	memTable := memory.NewMemTable(10, comparator.StringKeyComparator{})
-	key := db.NewSlice([]byte("HDD"))
-	value := db.NewSlice([]byte("Hard disk"))
+	key := model.NewSlice([]byte("HDD"))
+	value := model.NewSlice([]byte("Hard disk"))
 	memTable.Put(key, value)
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
+	ssTables, _ := sst.NewSSTables(directory)
 
-	memTableWriter, _ := NewMemTableWriter(memTable, directory)
+	memTableWriter := NewMemTableWriter(memTable, ssTables)
 	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 
@@ -41,8 +43,9 @@ func TestMemTableWriterWithFailureAsStatus(t *testing.T) {
 
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
+	ssTables, _ := sst.NewSSTables(directory)
 
-	memTableWriter, _ := NewMemTableWriter(emptyMemTable, directory)
+	memTableWriter := NewMemTableWriter(emptyMemTable, ssTables)
 	statusChannel := memTableWriter.Write()
 	status := <-statusChannel
 

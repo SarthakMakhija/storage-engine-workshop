@@ -1,7 +1,7 @@
 package sst
 
 import (
-	"storage-engine-workshop/db"
+	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"unsafe"
 )
@@ -20,7 +20,7 @@ func NewIndexBlock(store *Store) *IndexBlock {
 	}
 }
 
-func (indexBlock *IndexBlock) Write(beginOffsetByKey []int64, blockBeginOffset int64, keyValuePairs []db.KeyValuePair) error {
+func (indexBlock *IndexBlock) Write(beginOffsetByKey []int64, blockBeginOffset int64, keyValuePairs []model.KeyValuePair) error {
 	offset, indexBlockBeginOffset := blockBeginOffset, blockBeginOffset
 
 	for index, keyValuePair := range keyValuePairs {
@@ -38,7 +38,7 @@ func (indexBlock *IndexBlock) Write(beginOffsetByKey []int64, blockBeginOffset i
 	return err
 }
 
-func (indexBlock *IndexBlock) GetKeyOffset(key db.Slice, keyComparator comparator.KeyComparator) (int64, error) {
+func (indexBlock *IndexBlock) GetKeyOffset(key model.Slice, keyComparator comparator.KeyComparator) (int64, error) {
 	blockBytes, err := indexBlock.readIndexBlock()
 	if err != nil {
 		return -1, err
@@ -48,7 +48,7 @@ func (indexBlock *IndexBlock) GetKeyOffset(key db.Slice, keyComparator comparato
 		actualKeySize := bigEndian.Uint32(blockBytes[index:])
 		keyBeginIndex := index + int(reservedKeySize) + int(ReservedOffsetSize)
 		serializedKey := blockBytes[keyBeginIndex : keyBeginIndex+int(actualKeySize)]
-		if keyComparator.Compare(db.NewSlice(serializedKey), key) == 0 {
+		if keyComparator.Compare(model.NewSlice(serializedKey), key) == 0 {
 			keyOffset := bigEndian.Uint64(blockBytes[(index + int(reservedKeySize)):])
 			return int64(keyOffset), nil
 		}
@@ -78,7 +78,7 @@ func (indexBlock *IndexBlock) readIndexBlock() ([]byte, error) {
 	return blockBytes, nil
 }
 
-func (indexBlock *IndexBlock) marshal(key db.Slice, keyBeginOffset int64) []byte {
+func (indexBlock *IndexBlock) marshal(key model.Slice, keyBeginOffset int64) []byte {
 	actualTotalSize := uint64(reservedKeySize) + uint64(ReservedOffsetSize) + uint64(key.Size())
 
 	//The way index block is encoded is: 4 bytes for keySize | 8 bytes for offsetSize | Key content

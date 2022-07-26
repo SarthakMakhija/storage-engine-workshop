@@ -1,8 +1,8 @@
-package db
+package model
 
 type GetResult struct {
-	Value  Slice
-	Exists bool
+	Key, Value Slice
+	Exists     bool
 }
 
 type MultiGetResult struct {
