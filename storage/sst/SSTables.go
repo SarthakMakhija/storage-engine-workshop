@@ -54,7 +54,7 @@ func (ssTables *SSTables) NewSSTable(memTable *memory.MemTable) (*SSTable, error
 	return ssTable, nil
 }
 
-func (ssTables *SSTables) AddNew(ssTable *SSTable) {
+func (ssTables *SSTables) AllowSearchIn(ssTable *SSTable) {
 	ssTables.lock.Lock()
 	defer ssTables.lock.Unlock()
 
