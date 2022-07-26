@@ -2,7 +2,7 @@ package utils
 
 import "testing"
 
-func TestShouldGenerateLevelGreaterThankEqualTo1(t *testing.T) {
+func TestShouldGenerateLevelGreaterThanEqualTo1(t *testing.T) {
 	levelGenerator := NewLevelGenerator(10)
 	level := levelGenerator.Generate()
 
