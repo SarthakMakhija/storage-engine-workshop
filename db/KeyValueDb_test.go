@@ -21,6 +21,7 @@ func tempDirectory() string {
 func TestPut500KeysValuesAndGetByKeys(t *testing.T) {
 	const segmentMaxSizeBytes uint64 = 32
 	const bufferMaxSizeBytes uint64 = 1024
+
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
