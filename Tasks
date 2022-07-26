@@ -17,7 +17,7 @@
 9. Implement SSTable (convert MemTable to SSTable)
    done
 10. Convert memtable to SSTable when the size of memtable has reached its limit
-   pending
+   done
 11. Implement flushing in SSTable
    done
 12. Implement read from SSTable
@@ -33,7 +33,7 @@
 17. Implement transactions
    pending
 18. Implement concurrency
-   pending
+   done
 19. Implement update using versioned put
    pending
 20. Write benchmarks
@@ -56,8 +56,12 @@ Not needed
 NA
 
 
-1) People who are interested in building a storage engine
-2) People who are into scaling the databases
+1) All developers
+Add archetypes .. this will be needed before the workshop goes on Campus
+
+1. Put B+Tree somewhere !!!
+    - with code
+    - focussing on how these data structures map on disk
 
 Day1 - 3 hours
     What is storage engine?
@@ -109,5 +113,29 @@ Day3 - 4 hours
         - google performance profiler
         - perf (Linux)
     Conclusion??
+        - postgres
+        - rocks
+        - redis
+
+
+
+
+
+db(put)
+ 1) single writer / multiple reader
+ 2) singular update queue
+
+ -> WAL
+        -> memtable if space is available
+        else,
+            new memtable
+            and a goroutine memtable - sstable
+
+
+
+
+
+
+
 
 
