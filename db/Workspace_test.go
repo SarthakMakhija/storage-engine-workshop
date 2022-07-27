@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"os"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
@@ -80,7 +79,7 @@ func TestPut1000KeysValuesAndMultiGetKeysInWorkspace(t *testing.T) {
 	multiGetResult := workspace.multiGet(keys)
 	for _, result := range multiGetResult {
 		if result.Value.AsString() != expectedValueByKey[result.Key.AsString()] {
-			t.Errorf(fmt.Sprintf("Expected value to be %v, received %v", expectedValueByKey[result.Key.AsString()], result.Value.AsString()))
+			t.Fatalf("Expected value to be %v, received %v", expectedValueByKey[result.Key.AsString()], result.Value.AsString())
 		}
 	}
 }
