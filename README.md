@@ -4,15 +4,15 @@ This repository will be used in "building storage engine" workshop. As a part of
 merge and compaction.
 
 This repository is supposed to contain the following:
-1. Implementation of Memtable
-2. Implementation of SSTable
-3. Implementation of concurrency, using either a single writer/multiple readers pattern or a singular update queue pattern
-4. Implementation of write-ahead logging
-5. Implementation of transactions
-6. Implementation of Bloom filter
-7. Implementation of "Put", "Get", "MultiGet" and "Update"
-8. Implementation of "Get" and "MultiGet" in Memtable and SSTable
-9. Implementation of "Update" using versioned put
+- [X] Implementation of Memtable
+- [X] Implementation of SSTable
+- [X] Implementation of concurrency, using either a single writer/multiple readers pattern or a singular update queue pattern
+- [X] Implementation of write-ahead logging
+- [ ] Implementation of transactions
+- [X] Implementation of Bloom filter
+- [X] Implementation of "Put", "Get", "MultiGet"
+- [X] Implementation of "Get" and "MultiGet" in Memtable and SSTable
+- [ ] Implementation of "Update" using versioned put
 
 # Build Status
 [![Actions Status](https://github.com/SarthakMakhija/storage-engine-workshop/workflows/GoCI/badge.svg)](https://github.com/SarthakMakhija/storage-engine-workshop/actions)
