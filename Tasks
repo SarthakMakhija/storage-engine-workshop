@@ -48,5 +48,5 @@
    done
 25. Handle conflicts in transaction.put
     pending
-26. Adds tests for checking transaction marker
+26. Adds tests for checking transaction marker + multiget in transaction
     pending
