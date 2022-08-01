@@ -25,3 +25,7 @@ func (batch *Batch) putInMemtable() error {
 	}
 	return nil
 }
+
+func (batch *Batch) isEmpty() bool {
+	return len(batch.keyValuePairs) == 0
+}

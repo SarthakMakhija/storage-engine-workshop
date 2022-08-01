@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/log"
 )
@@ -37,6 +38,9 @@ func (txn *Transaction) Put(key, value model.Slice) error {
 }
 
 func (txn *Transaction) Commit() error {
+	if txn.batch.isEmpty() {
+		return errors.New("nothing to commit, put key/value before committing")
+	}
 	err := txn.batch.putInMemtable()
 	if err != nil {
 		_ = txn.log.MarkTransactionWith(log.TransactionStatusFailed)

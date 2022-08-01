@@ -9,6 +9,23 @@ import (
 	"testing"
 )
 
+func TestAttemptsToCommitATransactionWithEmptyBatch(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := log.NewLog(directory, segmentMaxSizeBytes)
+
+	executor := initRequestExecutor()
+	transaction := newTransaction(wal, executor)
+
+	err := transaction.Commit()
+
+	if err == nil {
+		t.Fatalf("Expected an error on commiting without invoking put but received not error")
+	}
+}
+
 func TestPutsAKeyValuePairAndGetsByKey(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
