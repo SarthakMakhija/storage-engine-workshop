@@ -36,6 +36,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		_ = wal.MarkTransactionWith(TransactionStatusSuccess)
 	}
 
 	persistentKeyValuePairs, err := wal.ReadAll()
@@ -76,6 +77,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 		if err != nil {
 			log.Fatal(err)
 		}
+		_ = originalWal.MarkTransactionWith(TransactionStatusSuccess)
 	}
 
 	originalWal.Close()

@@ -54,6 +54,11 @@ func (log *WAL) Append(putCommand PutCommand) error {
 	return appendToActiveSegment()
 }
 
+func (log *WAL) MarkTransactionWith(transactionStatus TransactionStatus) error {
+	status := byte(transactionStatus)
+	return log.activeSegment.Append(PersistentLogSlice{contents: []byte{status}})
+}
+
 func (log *WAL) ReadAll() ([]PersistentKeyValuePair, error) {
 	allSegments := func() []*Segment {
 		copiedPassiveSegments := make([]*Segment, len(log.passiveSegments))

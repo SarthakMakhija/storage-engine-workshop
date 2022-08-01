@@ -36,14 +36,19 @@ func TestPut1000KeysValuesAndGetByKeys(t *testing.T) {
 	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
 	db, _ := NewKeyValueDb(configuration)
 
+	txn := db.newTransaction()
 	for count := 1; count <= 1000; count++ {
-		_ = db.Put(keyUsing(count), valueUsing(count))
+		_ = txn.Put(keyUsing(count), valueUsing(count))
+	}
+	if err := txn.Commit(); err != nil {
+		log.Fatal(err)
 	}
 
 	allowFlushingSSTable()
 
+	readonlyTxn := db.newReadonlyTransaction()
 	for count := 1; count <= 1000; count++ {
-		getResult := db.Get(keyUsing(count))
+		getResult := readonlyTxn.Get(keyUsing(count))
 		expectedValue := valueUsing(count)
 
 		if getResult.Value.AsString() != expectedValue.AsString() {
@@ -53,5 +58,5 @@ func TestPut1000KeysValuesAndGetByKeys(t *testing.T) {
 }
 
 func allowFlushingSSTable() {
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 }

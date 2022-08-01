@@ -71,7 +71,7 @@ func marshal(keyValuePair model.KeyValuePair) PersistentLogSlice {
 			int(reservedTotalSize) + transactionMarkerSize
 
 	//The way PutCommand is encoded is: 4 bytes for totalSize | 4 bytes for keySize | Key content | Value content | 1 byte for transaction marker begin | 1 byte for transaction marker end |
-	bytes := make([]byte, actualTotalSize)
+	bytes := make([]byte, actualTotalSize-1)
 	offset := 0
 
 	bigEndian.PutUint32(bytes, uint32(actualTotalSize))

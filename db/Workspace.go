@@ -2,14 +2,12 @@ package db
 
 import (
 	"storage-engine-workshop/db/model"
-	"storage-engine-workshop/log"
 	"storage-engine-workshop/storage"
 	"storage-engine-workshop/storage/memory"
 	"storage-engine-workshop/storage/sst"
 )
 
 type Workspace struct {
-	log              *log.WAL
 	ssTables         *sst.SSTables
 	activeMemTable   *memory.MemTable
 	inactiveMemTable *memory.MemTable
@@ -17,16 +15,11 @@ type Workspace struct {
 }
 
 func newWorkSpace(configuration Configuration) (*Workspace, error) {
-	wal, err := log.NewLog(configuration.directory, configuration.segmentMaxSizeBytes)
-	if err != nil {
-		return nil, err
-	}
 	ssTables, err := sst.NewSSTables(configuration.directory)
 	if err != nil {
 		return nil, err
 	}
 	return &Workspace{
-		log:            wal,
 		ssTables:       ssTables,
 		activeMemTable: memory.NewMemTable(32, configuration.keyComparator),
 		configuration:  configuration,
@@ -34,10 +27,6 @@ func newWorkSpace(configuration Configuration) (*Workspace, error) {
 }
 
 func (workspace *Workspace) put(key model.Slice, value model.Slice) error {
-	err := workspace.log.Append(log.NewPutCommand(model.KeyValuePair{Key: key, Value: value}))
-	if err != nil {
-		return err
-	}
 	writeToSSTable := func() {
 		//handle error
 		storage.NewMemTableWriter(workspace.activeMemTable, workspace.ssTables).Write()

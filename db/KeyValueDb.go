@@ -1,31 +1,33 @@
 package db
 
 import (
-	"storage-engine-workshop/db/model"
+	"storage-engine-workshop/log"
 )
 
 type KeyValueDb struct {
+	log      *log.WAL
 	executor *RequestExecutor
 }
 
 func NewKeyValueDb(configuration Configuration) (*KeyValueDb, error) {
+	wal, err := log.NewLog(configuration.directory, configuration.segmentMaxSizeBytes)
+	if err != nil {
+		return nil, err
+	}
 	workSpace, err := newWorkSpace(configuration)
 	if err != nil {
 		return nil, err
 	}
 	return &KeyValueDb{
+		log:      wal,
 		executor: newRequestExecutor(workSpace),
 	}, nil
 }
 
-func (db *KeyValueDb) Put(key, value model.Slice) error {
-	return <-db.executor.put(key, value)
+func (db *KeyValueDb) newTransaction() *Transaction {
+	return newTransaction(db.log, db.executor)
 }
 
-func (db *KeyValueDb) Get(key model.Slice) model.GetResult {
-	return <-db.executor.get(key)
-}
-
-func (db *KeyValueDb) MultiGet(keys []model.Slice) []model.GetResult {
-	return <-db.executor.multiGet(keys)
+func (db *KeyValueDb) newReadonlyTransaction() ReadonlyTransaction {
+	return newReadonlyTransaction(db.executor)
 }
