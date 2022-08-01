@@ -38,7 +38,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 		}
 	}
 
-	putCommands, err := wal.ReadAll()
+	persistentKeyValuePairs, err := wal.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,13 +46,13 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 	for count := 1; count <= 20; count++ {
 		expectedKey := keyUsing(count)
 		expectedValue := valueUsing(count)
-		putCommand := putCommands[count-1]
+		keyValuePair := persistentKeyValuePairs[count-1]
 
-		if putCommand.key().AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key().AsString())
+		if keyValuePair.Key.GetSlice().AsString() != expectedKey.AsString() {
+			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), keyValuePair.Key.GetSlice().AsString())
 		}
-		if putCommand.value().AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value().AsString())
+		if keyValuePair.Value.GetSlice().AsString() != expectedValue.AsString() {
+			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), keyValuePair.Value.GetSlice().AsString())
 		}
 	}
 }
@@ -80,7 +80,7 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 
 	originalWal.Close()
 	walAfterRestart, _ := NewLog(directory, segmentMaxSizeBytes)
-	putCommands, err := walAfterRestart.ReadAll()
+	persistentKeyValuePairs, err := walAfterRestart.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,13 +88,13 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing
 	for count := 1; count <= 20; count++ {
 		expectedKey := keyUsing(count)
 		expectedValue := valueUsing(count)
-		putCommand := putCommands[count-1]
+		keyValuePair := persistentKeyValuePairs[count-1]
 
-		if putCommand.key().AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), putCommand.key().AsString())
+		if keyValuePair.Key.GetSlice().AsString() != expectedKey.AsString() {
+			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), keyValuePair.Key.GetSlice().AsString())
 		}
-		if putCommand.value().AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), putCommand.value().AsString())
+		if keyValuePair.Value.GetSlice().AsString() != expectedValue.AsString() {
+			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), keyValuePair.Value.GetSlice().AsString())
 		}
 	}
 }

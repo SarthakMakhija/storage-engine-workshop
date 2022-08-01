@@ -44,11 +44,11 @@ func (store *Store) ReadAll() ([]PersistentKeyValuePair, error) {
 	var currentOffset int64 = 0
 
 	for currentOffset < store.size {
-		key, value, nextOffset, err := store.readAt(currentOffset)
+		key, value, transactionStatus, nextOffset, err := store.readAt(currentOffset)
 		if err != nil {
 			return nil, err
 		}
-		keyValuePairs = append(keyValuePairs, PersistentKeyValuePair{Key: key, Value: value})
+		keyValuePairs = append(keyValuePairs, PersistentKeyValuePair{Key: key, Value: value, TransactionStatus: transactionStatus})
 		currentOffset = nextOffset
 	}
 	return keyValuePairs, nil
@@ -65,19 +65,19 @@ func (store *Store) Close() {
 	}
 }
 
-func (store *Store) readAt(offset int64) (PersistentLogSlice, PersistentLogSlice, int64, error) {
+func (store *Store) readAt(offset int64) (PersistentLogSlice, PersistentLogSlice, TransactionStatus, int64, error) {
 	bytes := make([]byte, int(reservedTotalSize))
 	_, err := store.file.ReadAt(bytes, offset)
 	if err != nil {
-		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, err
+		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, -1, err
 	}
 	sizeToRead := ActualTotalSize(bytes)
 	contents := make([]byte, sizeToRead)
 
 	_, err = store.file.ReadAt(contents, offset)
 	if err != nil {
-		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, err
+		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, -1, err
 	}
-	key, value := NewPersistentLogSliceKeyValuePair(contents)
-	return key, value, offset + int64(sizeToRead), nil
+	key, value, transactionStatus := NewPersistentLogSliceKeyValuePair(contents)
+	return key, value, transactionStatus, offset + int64(sizeToRead), nil
 }

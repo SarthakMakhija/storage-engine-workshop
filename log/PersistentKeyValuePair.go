@@ -1,6 +1,7 @@
 package log
 
 type PersistentKeyValuePair struct {
-	Key   PersistentLogSlice
-	Value PersistentLogSlice
+	Key               PersistentLogSlice
+	Value             PersistentLogSlice
+	TransactionStatus TransactionStatus
 }

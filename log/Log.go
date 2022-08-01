@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"sort"
-	"storage-engine-workshop/db/model"
 )
 
 type WAL struct {
@@ -55,31 +54,23 @@ func (log *WAL) Append(putCommand PutCommand) error {
 	return appendToActiveSegment()
 }
 
-func (log *WAL) ReadAll() ([]PutCommand, error) {
+func (log *WAL) ReadAll() ([]PersistentKeyValuePair, error) {
 	allSegments := func() []*Segment {
 		copiedPassiveSegments := make([]*Segment, len(log.passiveSegments))
 		copy(copiedPassiveSegments, log.passiveSegments)
 
 		return append(copiedPassiveSegments, log.activeSegment)
 	}
-	keyValuePairsToPutCommands := func(keyValuePairs []PersistentKeyValuePair) []PutCommand {
-		putCommands := make([]PutCommand, len(keyValuePairs))
-		for index, pair := range keyValuePairs {
-			putCommands[index] =
-				NewPutCommand(model.KeyValuePair{Key: pair.Key.GetSlice(), Value: pair.Value.GetSlice()})
-		}
-		return putCommands
-	}
-	readAllSegments := func() ([]PutCommand, error) {
-		var allPutCommands []PutCommand
+	readAllSegments := func() ([]PersistentKeyValuePair, error) {
+		var allKeyValuePairs []PersistentKeyValuePair
 		for _, segment := range allSegments() {
 			if keyValuePairs, err := segment.ReadAll(); err != nil {
 				return nil, err
 			} else {
-				allPutCommands = append(allPutCommands, keyValuePairsToPutCommands(keyValuePairs)...)
+				allKeyValuePairs = append(allKeyValuePairs, keyValuePairs...)
 			}
 		}
-		return allPutCommands, nil
+		return allKeyValuePairs, nil
 	}
 	return readAllSegments()
 }
