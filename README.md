@@ -12,7 +12,7 @@ This repository is supposed to contain the following:
 - [X] Implementation of Bloom filter
 - [X] Implementation of "Put", "Get", "MultiGet"
 - [X] Implementation of "Get" and "MultiGet" in Memtable and SSTable
-- [ ] Implementation of "Update" using versioned put
+- [ ] Implementation of "Update" using versioned put (Next version)
 
 # Build Status
 [![Actions Status](https://github.com/SarthakMakhija/storage-engine-workshop/workflows/GoCI/badge.svg)](https://github.com/SarthakMakhija/storage-engine-workshop/actions)
