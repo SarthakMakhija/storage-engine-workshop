@@ -7,6 +7,7 @@ import (
 	"storage-engine-workshop/db/model"
 	"storage-engine-workshop/storage/comparator"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -62,6 +63,57 @@ func TestPut1000KeysValuesAndGetByKeys(t *testing.T) {
 	}
 }
 
+func TestPutsKeyValuePairsConcurrently(t *testing.T) {
+	const segmentMaxSizeBytes uint64 = 10 * 1024 * 1024
+	const bufferMaxSizeBytes uint64 = 512
+
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	keyUsing := func(id, count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(id) + "-" + strconv.Itoa(count)))
+	}
+	valueUsing := func(id, count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(id) + "-" + strconv.Itoa(count)))
+	}
+
+	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
+	db, _ := NewKeyValueDb(configuration)
+
+	var wg sync.WaitGroup
+	wg.Add(10)
+
+	for goroutineId := 1; goroutineId <= 10; goroutineId++ {
+		go func(id int) {
+			defer wg.Done()
+			txn := db.newTransaction()
+			for index := 1; index <= 200; index++ {
+				_ = txn.Put(keyUsing(id, index), valueUsing(id, index))
+			}
+			_ = txn.Commit()
+		}(goroutineId)
+	}
+
+	wg.Wait()
+	allowFlushingSSTableFor(2 * time.Second)
+
+	readonlyTxn := db.newReadonlyTransaction()
+	for goroutineId := 1; goroutineId <= 10; goroutineId++ {
+		for count := 1; count <= 200; count++ {
+			getResult := readonlyTxn.Get(keyUsing(goroutineId, count))
+			expectedValue := valueUsing(goroutineId, count)
+
+			if getResult.Value.AsString() != expectedValue.AsString() {
+				t.Fatalf("Expected %v, received %v", expectedValue.AsString(), getResult.Value.AsString())
+			}
+		}
+	}
+}
+
 func allowFlushingSSTable() {
-	time.Sleep(1 * time.Second)
+	allowFlushingSSTableFor(1 * time.Second)
+}
+
+func allowFlushingSSTableFor(duration time.Duration) {
+	time.Sleep(duration)
 }
