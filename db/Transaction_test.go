@@ -3,21 +3,16 @@ package db
 import (
 	"os"
 	"storage-engine-workshop/db/model"
-	"storage-engine-workshop/log"
 	"strconv"
 	"sync"
 	"testing"
 )
 
 func TestAttemptsToCommitATransactionWithEmptyBatch(t *testing.T) {
-	directory := tempDirectory()
+	executor, directory := initRequestExecutor()
 	defer os.RemoveAll(directory)
 
-	var segmentMaxSizeBytes uint64 = 32
-	wal, _ := log.NewLog(directory, segmentMaxSizeBytes)
-
-	executor := initRequestExecutor()
-	transaction := newTransaction(wal, executor)
+	transaction := newTransaction(executor)
 
 	err := transaction.Commit()
 
@@ -26,15 +21,27 @@ func TestAttemptsToCommitATransactionWithEmptyBatch(t *testing.T) {
 	}
 }
 
-func TestPutsAKeyValuePairAndGetsByKey(t *testing.T) {
-	directory := tempDirectory()
+func TestAttemptsToCommitATransactionWithTotalKeyValuePairsGreaterThanAllowed(t *testing.T) {
+	executor, directory := initRequestExecutor()
 	defer os.RemoveAll(directory)
 
-	var segmentMaxSizeBytes uint64 = 32
-	wal, _ := log.NewLog(directory, segmentMaxSizeBytes)
+	transaction := newTransaction(executor)
 
-	executor := initRequestExecutor()
-	transaction := newTransaction(wal, executor)
+	var err error
+	for count := 1; count <= int(maxCapacityAllowed)+2; count++ {
+		err = transaction.Put(model.NewSlice([]byte("Key")), model.NewSlice([]byte("Value")))
+	}
+
+	if err == nil {
+		t.Fatalf("Expected an error on adding more key/value pairs than allowed but received none")
+	}
+}
+
+func TestPutsAKeyValuePairAndGetsByKey(t *testing.T) {
+	executor, directory := initRequestExecutor()
+	defer os.RemoveAll(directory)
+
+	transaction := newTransaction(executor)
 
 	_ = transaction.Put(model.NewSlice([]byte("Key")), model.NewSlice([]byte("Value")))
 	_ = transaction.Commit()
@@ -46,13 +53,6 @@ func TestPutsAKeyValuePairAndGetsByKey(t *testing.T) {
 }
 
 func TestPutsMultipleKeyValuePairsInDifferentGoroutines(t *testing.T) {
-	directory := tempDirectory()
-	defer os.RemoveAll(directory)
-
-	var segmentMaxSizeBytes uint64 = 32
-	executor := initRequestExecutor()
-	wal, _ := log.NewLog(directory, segmentMaxSizeBytes)
-
 	var wg sync.WaitGroup
 	wg.Add(10)
 
@@ -63,10 +63,13 @@ func TestPutsMultipleKeyValuePairsInDifferentGoroutines(t *testing.T) {
 		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
 	}
 
+	executor, directory := initRequestExecutor()
+	defer os.RemoveAll(directory)
+
 	for count := 1; count <= 10; count++ {
 		go func(keyIndex int) {
 			defer wg.Done()
-			transaction := newTransaction(wal, executor)
+			transaction := newTransaction(executor)
 			_ = transaction.Put(keyUsing(keyIndex), valueUsing(keyIndex))
 			_ = transaction.Commit()
 		}(count)

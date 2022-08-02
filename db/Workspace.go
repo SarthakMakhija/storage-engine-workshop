@@ -2,12 +2,14 @@ package db
 
 import (
 	"storage-engine-workshop/db/model"
+	"storage-engine-workshop/log"
 	"storage-engine-workshop/storage"
 	"storage-engine-workshop/storage/memory"
 	"storage-engine-workshop/storage/sst"
 )
 
 type Workspace struct {
+	wal              *log.WAL
 	ssTables         *sst.SSTables
 	activeMemTable   *memory.MemTable
 	inactiveMemTable *memory.MemTable
@@ -15,18 +17,23 @@ type Workspace struct {
 }
 
 func newWorkSpace(configuration Configuration) (*Workspace, error) {
+	wal, err := log.NewLog(configuration.directory, configuration.segmentMaxSizeBytes)
+	if err != nil {
+		return nil, err
+	}
 	ssTables, err := sst.NewSSTables(configuration.directory)
 	if err != nil {
 		return nil, err
 	}
 	return &Workspace{
+		wal:            wal,
 		ssTables:       ssTables,
 		activeMemTable: memory.NewMemTable(32, configuration.keyComparator),
 		configuration:  configuration,
 	}, nil
 }
 
-func (workspace *Workspace) put(key model.Slice, value model.Slice) error {
+func (workspace *Workspace) put(batch *Batch) error {
 	writeToSSTable := func() {
 		//handle error
 		storage.NewMemTableWriter(workspace.activeMemTable, workspace.ssTables).Write()
@@ -38,9 +45,23 @@ func (workspace *Workspace) put(key model.Slice, value model.Slice) error {
 			workspace.activeMemTable = memory.NewMemTable(32, workspace.configuration.keyComparator)
 		}
 	}
-	mayBeSwapMemTable()
-	workspace.activeMemTable.Put(key, value)
-	return nil
+	putInMemTable := func() {
+		for _, keyValuePair := range batch.keyValuePairs {
+			mayBeSwapMemTable()
+			workspace.activeMemTable.Put(keyValuePair.Key, keyValuePair.Value)
+		}
+	}
+	write := func() error {
+		if err := workspace.wal.BeginTransactionHeader(batch.totalSize()); err != nil {
+			return err
+		}
+		if err := workspace.wal.Append(batch.allEntriesAsPersistentLogSlice()); err != nil {
+			return err
+		}
+		putInMemTable()
+		return workspace.wal.MarkTransactionWith(log.TransactionStatusSuccess())
+	}
+	return write()
 }
 
 func (workspace *Workspace) get(key model.Slice) model.GetResult {

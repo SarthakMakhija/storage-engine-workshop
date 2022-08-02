@@ -1,31 +1,48 @@
 package db
 
-import "storage-engine-workshop/db/model"
+import (
+	"storage-engine-workshop/db/model"
+	"storage-engine-workshop/log"
+)
 
 type Batch struct {
-	executor      *RequestExecutor
-	keyValuePairs []model.KeyValuePair
+	keyValuePairs      []model.KeyValuePair
+	persistentLogSlice *log.PersistentLogSlice
+}
+
+func NewBatch() *Batch {
+	return &Batch{
+		keyValuePairs:      []model.KeyValuePair{},
+		persistentLogSlice: &log.PersistentLogSlice{},
+	}
 }
 
 func (batch *Batch) add(key, value model.Slice) {
-	batch.keyValuePairs = append(batch.keyValuePairs, model.KeyValuePair{Key: key, Value: value})
+	keyValuePair := model.KeyValuePair{Key: key, Value: value}
+	batch.keyValuePairs = append(batch.keyValuePairs, keyValuePair)
+	batch.persistentLogSlice.Add(log.NewPersistentLogSlice(keyValuePair))
 }
 
-func newBatch(executor *RequestExecutor) *Batch {
-	return &Batch{executor: executor, keyValuePairs: []model.KeyValuePair{}}
-}
-
-func (batch *Batch) putInMemtable() error {
-	for _, keyValuePair := range batch.keyValuePairs {
-		err := <-batch.executor.put(keyValuePair.Key, keyValuePair.Value)
-		if err != nil {
-			//Delete already added key/value
-			return err
-		}
-	}
-	return nil
+func (batch *Batch) allEntriesAsPersistentLogSlice() log.PersistentLogSlice {
+	return *(batch.persistentLogSlice)
 }
 
 func (batch *Batch) isEmpty() bool {
-	return len(batch.keyValuePairs) == 0
+	return batch.totalPairs() == 0
+}
+
+func (batch *Batch) isTotalPairCountGreaterThan(allowedPairCount uint8) bool {
+	return batch.totalPairs() > int(allowedPairCount)
+}
+
+func (batch *Batch) isTotalSizeGreaterThan(allowedSize uint16) bool {
+	return batch.totalSize() > allowedSize
+}
+
+func (batch *Batch) totalSize() uint16 {
+	return uint16(batch.persistentLogSlice.Size())
+}
+
+func (batch *Batch) totalPairs() int {
+	return len(batch.keyValuePairs)
 }

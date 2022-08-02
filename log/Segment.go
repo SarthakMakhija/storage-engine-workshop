@@ -29,14 +29,13 @@ func NewSegment(directory string, baseOffset int64, maxSizeBytes uint64) (*Segme
 }
 
 func (segment *Segment) Append(persistentLogSlice PersistentLogSlice) error {
-	err := segment.store.Append(persistentLogSlice)
-	if err != nil {
+	if err := segment.store.Append(persistentLogSlice); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (segment *Segment) ReadAll() ([]PersistentKeyValuePair, error) {
+func (segment *Segment) ReadAll() ([]TransactionalEntry, error) {
 	return segment.store.ReadAll()
 }
 
@@ -48,7 +47,7 @@ func (segment *Segment) IsMaxed() bool {
 }
 
 func (segment *Segment) LastOffset() int64 {
-	return int64(segment.store.Size()) + segment.baseOffSet
+	return segment.store.Size() + segment.baseOffSet
 }
 
 func (segment *Segment) Close() {

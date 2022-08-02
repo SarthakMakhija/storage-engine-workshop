@@ -26,33 +26,38 @@ func TestPut1000KeysValuesAndGetByKeys(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
-	keyUsing := func(count int) model.Slice {
-		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	keyUsing := func(id, count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(id) + "-" + strconv.Itoa(count)))
 	}
-	valueUsing := func(count int) model.Slice {
-		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	valueUsing := func(id, count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(id) + "-" + strconv.Itoa(count)))
 	}
 
 	configuration := NewConfiguration(directory, segmentMaxSizeBytes, bufferMaxSizeBytes, comparator.StringKeyComparator{})
 	db, _ := NewKeyValueDb(configuration)
 
-	txn := db.newTransaction()
-	for count := 1; count <= 1000; count++ {
-		_ = txn.Put(keyUsing(count), valueUsing(count))
-	}
-	if err := txn.Commit(); err != nil {
-		log.Fatal(err)
+	txns := []*Transaction{db.newTransaction(), db.newTransaction(), db.newTransaction(), db.newTransaction(), db.newTransaction()}
+	for transactionId := 0; transactionId < 5; transactionId++ {
+		for count := 1; count <= 200; count++ {
+			_ = txns[transactionId].Put(keyUsing(transactionId, count), valueUsing(transactionId, count))
+		}
+		err := txns[transactionId].Commit()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	allowFlushingSSTable()
 
 	readonlyTxn := db.newReadonlyTransaction()
-	for count := 1; count <= 1000; count++ {
-		getResult := readonlyTxn.Get(keyUsing(count))
-		expectedValue := valueUsing(count)
+	for transactionId := 0; transactionId < 5; transactionId++ {
+		for count := 1; count <= 200; count++ {
+			getResult := readonlyTxn.Get(keyUsing(transactionId, count))
+			expectedValue := valueUsing(transactionId, count)
 
-		if getResult.Value.AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected %v, received %v", expectedValue.AsString(), getResult.Value.AsString())
+			if getResult.Value.AsString() != expectedValue.AsString() {
+				t.Fatalf("Expected %v, received %v", expectedValue.AsString(), getResult.Value.AsString())
+			}
 		}
 	}
 }

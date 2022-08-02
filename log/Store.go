@@ -39,19 +39,19 @@ func (store *Store) Append(persistentLogSlice PersistentLogSlice) error {
 	return nil
 }
 
-func (store *Store) ReadAll() ([]PersistentKeyValuePair, error) {
-	var keyValuePairs []PersistentKeyValuePair
+func (store *Store) ReadAll() ([]TransactionalEntry, error) {
+	var entries []TransactionalEntry
 	var currentOffset int64 = 0
 
 	for currentOffset < store.size {
-		key, value, transactionStatus, nextOffset, err := store.readAt(currentOffset)
+		transactionalEntries, nextOffset, err := store.readAt(currentOffset)
 		if err != nil {
 			return nil, err
 		}
-		keyValuePairs = append(keyValuePairs, PersistentKeyValuePair{Key: key, Value: value, TransactionStatus: transactionStatus})
+		entries = append(entries, transactionalEntries)
 		currentOffset = nextOffset
 	}
-	return keyValuePairs, nil
+	return entries, nil
 }
 
 func (store *Store) Size() int64 {
@@ -65,19 +65,28 @@ func (store *Store) Close() {
 	}
 }
 
-func (store *Store) readAt(offset int64) (PersistentLogSlice, PersistentLogSlice, TransactionStatus, int64, error) {
-	bytes := make([]byte, int(reservedTotalSize))
-	_, err := store.file.ReadAt(bytes, offset)
+func (store *Store) readAt(offset int64) (TransactionalEntry, int64, error) {
+	transactionEntrySizeBytes := make([]byte, reservedTransactionHeaderSize)
+	_, err := store.file.ReadAt(transactionEntrySizeBytes, offset)
 	if err != nil {
-		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, -1, err
+		return TransactionalEntry{}, -1, err
 	}
-	sizeToRead := ActualTotalSize(bytes)
-	contents := make([]byte, sizeToRead)
+	transactionEntrySize := TransactionalEntrySize(transactionEntrySizeBytes)
+	transactionEntryBytes := make([]byte, transactionEntrySize)
+	offset = offset + int64(reservedTransactionHeaderSize)
 
-	_, err = store.file.ReadAt(contents, offset)
+	bytesRead, err := store.file.ReadAt(transactionEntryBytes, offset)
 	if err != nil {
-		return EmptyPersistentLogSlice(), EmptyPersistentLogSlice(), -1, -1, err
+		return TransactionalEntry{}, -1, err
 	}
-	key, value, transactionStatus := NewPersistentLogSliceKeyValuePair(contents)
-	return key, value, transactionStatus, offset + int64(sizeToRead), nil
+	offset = offset + int64(bytesRead)
+	pairs := NewPersistentLogSliceKeyValuePairs(transactionEntryBytes)
+
+	transactionStatusBytes := make([]byte, reservedTransactionStatusSize)
+	_, err = store.file.ReadAt(transactionStatusBytes, offset)
+	if err != nil {
+		return TransactionalEntry{}, -1, err
+	}
+	offset = offset + int64(reservedTransactionStatusSize)
+	return TransactionalEntry{keyValuePairs: pairs, status: TransactionStatusFrom(transactionStatusBytes)}, offset, nil
 }

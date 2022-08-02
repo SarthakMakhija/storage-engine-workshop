@@ -17,7 +17,181 @@ func tempDirectory() string {
 	return dir
 }
 
-func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
+func TestAppendsASuccessfulTransactionalEntryAndReadsIt(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := NewLog(directory, segmentMaxSizeBytes)
+
+	key, value := model.NewSlice([]byte("Key")), model.NewSlice([]byte("Value"))
+	persistentLogSlice := NewPersistentLogSlice(model.KeyValuePair{Key: key, Value: value})
+	allEntriesSize := persistentLogSlice.Size()
+
+	if err := wal.BeginTransactionHeader(uint16(allEntriesSize)); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.Append(persistentLogSlice); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.MarkTransactionWith(TransactionStatusSuccess()); err != nil {
+		log.Fatal(err)
+	}
+
+	transactionalEntries, err := wal.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+	onlyEntry := transactionalEntries[0]
+	if onlyEntry.status.isFailed() {
+		t.Fatalf("Expected status to be success, received failed")
+	}
+	if onlyEntry.keyValuePairs[0].Key.GetSlice().AsString() != "Key" {
+		t.Fatalf("Expected key to be %v received %v", "Key", onlyEntry.keyValuePairs[0].Key.GetSlice().AsString())
+	}
+	if onlyEntry.keyValuePairs[0].Value.GetSlice().AsString() != "Value" {
+		t.Fatalf("Expected value to be %v received %v", "Value", onlyEntry.keyValuePairs[0].Value.GetSlice().AsString())
+	}
+}
+
+func TestAppendsAFailedTransactionalEntryAndReadsIt(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := NewLog(directory, segmentMaxSizeBytes)
+
+	key, value := model.NewSlice([]byte("Key")), model.NewSlice([]byte("Value"))
+	persistentLogSlice := NewPersistentLogSlice(model.KeyValuePair{Key: key, Value: value})
+	allEntriesSize := persistentLogSlice.Size()
+
+	if err := wal.BeginTransactionHeader(uint16(allEntriesSize)); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.Append(persistentLogSlice); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.MarkTransactionWith(TransactionStatusFailed()); err != nil {
+		log.Fatal(err)
+	}
+
+	transactionalEntries, err := wal.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+	onlyEntry := transactionalEntries[0]
+	if onlyEntry.status.isSuccess() {
+		t.Fatalf("Expected status to be failed, received success")
+	}
+	if onlyEntry.keyValuePairs[0].Key.GetSlice().AsString() != "Key" {
+		t.Fatalf("Expected key to be %v received %v", "Key", onlyEntry.keyValuePairs[0].Key.GetSlice().AsString())
+	}
+	if onlyEntry.keyValuePairs[0].Value.GetSlice().AsString() != "Value" {
+		t.Fatalf("Expected value to be %v received %v", "Value", onlyEntry.keyValuePairs[0].Value.GetSlice().AsString())
+	}
+}
+
+func TestAppendsMultipleSuccessEntriesWithinOneTransactionAndReadsAllOfThem(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	}
+	valueUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	}
+
+	persistentLogSlice := PersistentLogSlice{}
+	for index := 0; index <= 20; index++ {
+		key, value := keyUsing(index), valueUsing(index)
+		persistentLogSlice.Add(NewPersistentLogSlice(model.KeyValuePair{Key: key, Value: value}))
+	}
+
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := NewLog(directory, segmentMaxSizeBytes)
+
+	if err := wal.BeginTransactionHeader(uint16(persistentLogSlice.Size())); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.Append(persistentLogSlice); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.MarkTransactionWith(TransactionStatusSuccess()); err != nil {
+		log.Fatal(err)
+	}
+
+	transactionalEntries, err := wal.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	onlyEntry := transactionalEntries[0]
+	if onlyEntry.status.isFailed() {
+		t.Fatalf("Expected status to be success, received failed")
+	}
+
+	for index := 0; index <= 20; index++ {
+		if onlyEntry.keyValuePairs[index].Key.GetSlice().AsString() != keyUsing(index).AsString() {
+			t.Fatalf("Expected key to be %v received %v", keyUsing(index).AsString(), onlyEntry.keyValuePairs[index].Key.GetSlice().AsString())
+		}
+		if onlyEntry.keyValuePairs[index].Value.GetSlice().AsString() != valueUsing(index).AsString() {
+			t.Fatalf("Expected value to be %v received %v", valueUsing(index).AsString(), onlyEntry.keyValuePairs[index].Value.GetSlice().AsString())
+		}
+	}
+}
+
+func TestAppendsMultipleFailedEntriesWithinOneTransactionAndReadsAllOfThem(t *testing.T) {
+	directory := tempDirectory()
+	defer os.RemoveAll(directory)
+
+	keyUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
+	}
+	valueUsing := func(count int) model.Slice {
+		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
+	}
+
+	persistentLogSlice := PersistentLogSlice{}
+	for index := 0; index <= 20; index++ {
+		key, value := keyUsing(index), valueUsing(index)
+		persistentLogSlice.Add(NewPersistentLogSlice(model.KeyValuePair{Key: key, Value: value}))
+	}
+
+	var segmentMaxSizeBytes uint64 = 32
+	wal, _ := NewLog(directory, segmentMaxSizeBytes)
+
+	if err := wal.BeginTransactionHeader(uint16(persistentLogSlice.Size())); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.Append(persistentLogSlice); err != nil {
+		log.Fatal(err)
+	}
+	if err := wal.MarkTransactionWith(TransactionStatusFailed()); err != nil {
+		log.Fatal(err)
+	}
+
+	transactionalEntries, err := wal.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	onlyEntry := transactionalEntries[0]
+	if onlyEntry.status.isSuccess() {
+		t.Fatalf("Expected status to be failed, received success")
+	}
+
+	for index := 0; index <= 20; index++ {
+		if onlyEntry.keyValuePairs[index].Key.GetSlice().AsString() != keyUsing(index).AsString() {
+			t.Fatalf("Expected key to be %v received %v", keyUsing(index).AsString(), onlyEntry.keyValuePairs[index].Key.GetSlice().AsString())
+		}
+		if onlyEntry.keyValuePairs[index].Value.GetSlice().AsString() != valueUsing(index).AsString() {
+			t.Fatalf("Expected value to be %v received %v", valueUsing(index).AsString(), onlyEntry.keyValuePairs[index].Value.GetSlice().AsString())
+		}
+	}
+}
+
+func TestAppendsMultipleSuccessEntriesWithinMultipleTransactionsAndReadsAllOfThem(t *testing.T) {
 	directory := tempDirectory()
 	defer os.RemoveAll(directory)
 
@@ -30,73 +204,47 @@ func TestAppendsToWriteAheadLogAndReadsTheEntireLog(t *testing.T) {
 
 	var segmentMaxSizeBytes uint64 = 32
 	wal, _ := NewLog(directory, segmentMaxSizeBytes)
-	for count := 1; count <= 20; count++ {
-		putCommand := NewPutCommandWithKeyValue(keyUsing(count), valueUsing(count))
-		err := wal.Append(putCommand)
-		if err != nil {
+
+	makeTransactionalEntries := func(beginIndex, endIndex int) {
+		persistentLogSlice := PersistentLogSlice{}
+		for index := beginIndex; index < endIndex; index++ {
+			key, value := keyUsing(index), valueUsing(index)
+			persistentLogSlice.Add(NewPersistentLogSlice(model.KeyValuePair{Key: key, Value: value}))
+		}
+
+		if err := wal.BeginTransactionHeader(uint16(persistentLogSlice.Size())); err != nil {
 			log.Fatal(err)
 		}
-		_ = wal.MarkTransactionWith(TransactionStatusSuccess)
+		if err := wal.Append(persistentLogSlice); err != nil {
+			log.Fatal(err)
+		}
+		if err := wal.MarkTransactionWith(TransactionStatusFailed()); err != nil {
+			log.Fatal(err)
+		}
 	}
+	makeTransactionalEntries(0, 20)
+	makeTransactionalEntries(20, 40)
 
-	persistentKeyValuePairs, err := wal.ReadAll()
+	transactionalEntries, err := wal.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for count := 1; count <= 20; count++ {
-		expectedKey := keyUsing(count)
-		expectedValue := valueUsing(count)
-		keyValuePair := persistentKeyValuePairs[count-1]
-
-		if keyValuePair.Key.GetSlice().AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), keyValuePair.Key.GetSlice().AsString())
+	assertEntries := func(entryIndex int, keyValuePairIndexOffset, keyValuePairBeginIndex, keyValuePairEndIndex int) {
+		entry := transactionalEntries[entryIndex]
+		if entry.status.isSuccess() {
+			t.Fatalf("Expected status to be failed, received success")
 		}
-		if keyValuePair.Value.GetSlice().AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), keyValuePair.Value.GetSlice().AsString())
-		}
-	}
-}
 
-func TestAppendsToWriteAheadLogAndReadsTheEntireLogSimulatingARestart(t *testing.T) {
-	directory := tempDirectory()
-	defer os.RemoveAll(directory)
-
-	keyUsing := func(count int) model.Slice {
-		return model.NewSlice([]byte("Key-" + strconv.Itoa(count)))
-	}
-	valueUsing := func(count int) model.Slice {
-		return model.NewSlice([]byte("Value-" + strconv.Itoa(count)))
-	}
-
-	var segmentMaxSizeBytes uint64 = 32
-	originalWal, _ := NewLog(directory, segmentMaxSizeBytes)
-	for count := 1; count <= 20; count++ {
-		putCommand := NewPutCommandWithKeyValue(keyUsing(count), valueUsing(count))
-		err := originalWal.Append(putCommand)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_ = originalWal.MarkTransactionWith(TransactionStatusSuccess)
-	}
-
-	originalWal.Close()
-	walAfterRestart, _ := NewLog(directory, segmentMaxSizeBytes)
-	persistentKeyValuePairs, err := walAfterRestart.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for count := 1; count <= 20; count++ {
-		expectedKey := keyUsing(count)
-		expectedValue := valueUsing(count)
-		keyValuePair := persistentKeyValuePairs[count-1]
-
-		if keyValuePair.Key.GetSlice().AsString() != expectedKey.AsString() {
-			t.Fatalf("Expected key %v, received %v", expectedKey.AsString(), keyValuePair.Key.GetSlice().AsString())
-		}
-		if keyValuePair.Value.GetSlice().AsString() != expectedValue.AsString() {
-			t.Fatalf("Expected value %v, received %v", expectedValue.AsString(), keyValuePair.Value.GetSlice().AsString())
+		for index := keyValuePairBeginIndex; index < keyValuePairEndIndex; index++ {
+			if entry.keyValuePairs[index].Key.GetSlice().AsString() != keyUsing(index+keyValuePairIndexOffset).AsString() {
+				t.Fatalf("Expected key to be %v received %v", keyUsing(index+keyValuePairIndexOffset).AsString(), entry.keyValuePairs[index].Key.GetSlice().AsString())
+			}
+			if entry.keyValuePairs[index].Value.GetSlice().AsString() != valueUsing(index+keyValuePairIndexOffset).AsString() {
+				t.Fatalf("Expected value to be %v received %v", valueUsing(index+keyValuePairIndexOffset).AsString(), entry.keyValuePairs[index].Value.GetSlice().AsString())
+			}
 		}
 	}
+	assertEntries(0, 0, 0, 20)
+	assertEntries(1, 20, 0, 20)
 }

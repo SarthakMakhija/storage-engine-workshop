@@ -19,15 +19,15 @@ func newRequestExecutor(workSpace *Workspace) *RequestExecutor {
 }
 
 func (executor *RequestExecutor) init() {
-	put := func(putRequest model.PutRequest) {
-		putRequest.ResponseChannel <- executor.workSpace.put(putRequest.Key, putRequest.Value)
+	put := func(putRequest PutRequest) {
+		putRequest.ResponseChannel <- executor.workSpace.put(putRequest.Batch)
 		close(putRequest.ResponseChannel)
 	}
-	get := func(getRequest model.GetRequest) {
+	get := func(getRequest GetRequest) {
 		getRequest.ResponseChannel <- executor.workSpace.get(getRequest.Key)
 		close(getRequest.ResponseChannel)
 	}
-	multiGet := func(multiGetRequest model.MultiGetRequest) {
+	multiGet := func(multiGetRequest MultiGetRequest) {
 		multiGetRequest.ResponseChannel <- executor.workSpace.multiGet(multiGetRequest.Keys)
 		close(multiGetRequest.ResponseChannel)
 	}
@@ -35,31 +35,31 @@ func (executor *RequestExecutor) init() {
 	go func() {
 		for {
 			request := <-executor.requestChannel
-			if putRequest, ok := request.(model.PutRequest); ok {
+			if putRequest, ok := request.(PutRequest); ok {
 				put(putRequest)
-			} else if getRequest, ok := request.(model.GetRequest); ok {
+			} else if getRequest, ok := request.(GetRequest); ok {
 				get(getRequest)
-			} else if multiGetRequest, ok := request.(model.MultiGetRequest); ok {
+			} else if multiGetRequest, ok := request.(MultiGetRequest); ok {
 				multiGet(multiGetRequest)
 			}
 		}
 	}()
 }
 
-func (executor *RequestExecutor) put(key, value model.Slice) chan error {
+func (executor *RequestExecutor) put(batch *Batch) chan error {
 	responseChannel := make(chan error)
-	executor.requestChannel <- model.PutRequest{Key: key, Value: value, ResponseChannel: responseChannel}
+	executor.requestChannel <- PutRequest{Batch: batch, ResponseChannel: responseChannel}
 	return responseChannel
 }
 
 func (executor *RequestExecutor) get(key model.Slice) chan model.GetResult {
 	responseChannel := make(chan model.GetResult)
-	executor.requestChannel <- model.GetRequest{Key: key, ResponseChannel: responseChannel}
+	executor.requestChannel <- GetRequest{Key: key, ResponseChannel: responseChannel}
 	return responseChannel
 }
 
 func (executor *RequestExecutor) multiGet(keys []model.Slice) chan []model.GetResult {
 	responseChannel := make(chan []model.GetResult)
-	executor.requestChannel <- model.MultiGetRequest{Keys: keys, ResponseChannel: responseChannel}
+	executor.requestChannel <- MultiGetRequest{Keys: keys, ResponseChannel: responseChannel}
 	return responseChannel
 }

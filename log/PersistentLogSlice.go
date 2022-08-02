@@ -7,39 +7,34 @@ import (
 )
 
 var (
-	bigEndian                     = binary.BigEndian
-	reservedTotalSize             = unsafe.Sizeof(uint32(0))
-	reservedKeySize               = unsafe.Sizeof(uint32(0))
-	transactionMarkerSize         = 2
-	transactionMarkerBegin   byte = 'B'
-	transactionMarkerSuccess byte = 'S'
-	transactionMarkerFailed  byte = 'F'
+	bigEndian                           = binary.BigEndian
+	reservedEntrySize                   = unsafe.Sizeof(uint32(0))
+	reservedKeySize                     = unsafe.Sizeof(uint32(0))
+	reservedTransactionHeaderSize uint8 = 2
+	reservedTransactionStatusSize uint8 = TransactionStatusSize()
 )
 
-type TransactionStatus int
-
-const (
-	TransactionStatusSuccess  TransactionStatus = iota
-	TransactionStatusFailed   TransactionStatus = 1
-	TransactionStatusDangling TransactionStatus = 2
-)
+type TransactionalEntry struct {
+	keyValuePairs []PersistentKeyValuePair
+	status        TransactionStatus
+}
 
 type PersistentLogSlice struct {
 	contents []byte
-}
-
-var emptyPersistentLogSlice = PersistentLogSlice{contents: []byte{}}
-
-func EmptyPersistentLogSlice() PersistentLogSlice {
-	return emptyPersistentLogSlice
 }
 
 func NewPersistentLogSlice(keyValuePair model.KeyValuePair) PersistentLogSlice {
 	return marshal(keyValuePair)
 }
 
-func NewPersistentLogSliceKeyValuePair(contents []byte) (PersistentLogSlice, PersistentLogSlice, TransactionStatus) {
+func NewPersistentLogSliceKeyValuePairs(contents []byte) []PersistentKeyValuePair {
 	return unmarshal(contents)
+}
+
+func NewPersistentLogSliceTransactionHeader(totalSize uint16) PersistentLogSlice {
+	bytes := make([]byte, reservedTransactionHeaderSize)
+	bigEndian.PutUint16(bytes, totalSize)
+	return PersistentLogSlice{contents: bytes}
 }
 
 func (persistentLogSlice PersistentLogSlice) GetPersistentContents() []byte {
@@ -58,24 +53,23 @@ func (persistentLogSlice *PersistentLogSlice) Add(other PersistentLogSlice) {
 	persistentLogSlice.contents = append(persistentLogSlice.contents, other.contents...)
 }
 
-func ActualTotalSize(bytes []byte) uint32 {
-	return bigEndian.Uint32(bytes)
+func TransactionalEntrySize(bytes []byte) uint16 {
+	return bigEndian.Uint16(bytes)
 }
 
 func marshal(keyValuePair model.KeyValuePair) PersistentLogSlice {
-	reservedTotalSize, reservedKeySize := reservedTotalSize, reservedKeySize
-	actualTotalSize :=
+	entrySize :=
 		len(keyValuePair.Key.GetRawContent()) +
 			len(keyValuePair.Value.GetRawContent()) +
 			int(reservedKeySize) +
-			int(reservedTotalSize) + transactionMarkerSize
+			int(reservedEntrySize)
 
-	//The way PutCommand is encoded is: 4 bytes for totalSize | 4 bytes for keySize | Key content | Value content | 1 byte for transaction marker begin | 1 byte for transaction marker end |
-	bytes := make([]byte, actualTotalSize-1)
+	//The way PutCommand is encoded is: 4 bytes for entrySize | 4 bytes for keySize | Key content | Value content
+	bytes := make([]byte, entrySize)
 	offset := 0
 
-	bigEndian.PutUint32(bytes, uint32(actualTotalSize))
-	offset = offset + int(reservedTotalSize)
+	bigEndian.PutUint32(bytes, uint32(entrySize))
+	offset = offset + int(reservedEntrySize)
 
 	bigEndian.PutUint32(bytes[offset:], uint32(len(keyValuePair.Key.GetRawContent())))
 	offset = offset + int(reservedKeySize)
@@ -84,26 +78,36 @@ func marshal(keyValuePair model.KeyValuePair) PersistentLogSlice {
 	offset = offset + len(keyValuePair.Key.GetRawContent())
 
 	copy(bytes[offset:], keyValuePair.Value.GetRawContent())
-	offset = offset + len(keyValuePair.Value.GetRawContent())
-
-	bytes[offset] = transactionMarkerBegin
 	return PersistentLogSlice{contents: bytes}
 }
 
-func unmarshal(bytes []byte) (PersistentLogSlice, PersistentLogSlice, TransactionStatus) {
-	bytes = bytes[reservedTotalSize:]
-	size := len(bytes)
-	keySize := bigEndian.Uint32(bytes)
-	keyEndOffset := uint32(reservedKeySize) + keySize
-	valueEndOffset := size - 2
+func unmarshal(bytes []byte) []PersistentKeyValuePair {
+	var keyValuePairs []PersistentKeyValuePair
 
-	key, value := PersistentLogSlice{contents: bytes[reservedKeySize:keyEndOffset]}, PersistentLogSlice{contents: bytes[keyEndOffset:valueEndOffset]}
-	switch bytes[size-1] {
-	case transactionMarkerSuccess:
-		return key, value, TransactionStatusSuccess
-	case transactionMarkerFailed:
-		return key, value, TransactionStatusFailed
-	default:
-		return key, value, TransactionStatusDangling
+	length := uint32(len(bytes))
+	var index uint32 = 0
+	for index < length {
+		entrySize := bigEndian.Uint32(bytes[index:])
+		endIndex := index + entrySize
+
+		index = index + uint32(reservedEntrySize)
+		keySize := bigEndian.Uint32(bytes[index:])
+		index = index + uint32(reservedKeySize)
+
+		keyEndOffset := index + keySize
+		key := bytes[index:keyEndOffset]
+		index = index + uint32(len(key))
+
+		valueSize := endIndex - keyEndOffset
+		value := bytes[index : index+valueSize]
+		index = index + uint32(len(value))
+
+		keyValuePairs = append(keyValuePairs,
+			PersistentKeyValuePair{
+				Key:   PersistentLogSlice{contents: key},
+				Value: PersistentLogSlice{contents: value},
+			},
+		)
 	}
+	return keyValuePairs
 }

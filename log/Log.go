@@ -34,18 +34,17 @@ func NewLog(directory string, segmentMaxSizeBytes uint64) (*WAL, error) {
 	}
 }
 
-func (log *WAL) Append(putCommand PutCommand) error {
+func (log *WAL) BeginTransactionHeader(totalSize uint16) error {
 	rollOverActiveSegment := func() error {
 		log.passiveSegments = append(log.passiveSegments, log.activeSegment)
 		return log.openActiveSegmentAt(log.activeSegment.LastOffset(), log.activeSegment.maxSizeBytes)
 	}
 	appendToActiveSegment := func() error {
-		if err := log.activeSegment.Append(NewPersistentLogSlice(putCommand.keyValuePair)); err != nil {
+		if err := log.activeSegment.Append(NewPersistentLogSliceTransactionHeader(totalSize)); err != nil {
 			return err
 		}
 		return nil
 	}
-
 	if log.activeSegment.IsMaxed() {
 		if err := rollOverActiveSegment(); err != nil {
 			return err
@@ -54,28 +53,37 @@ func (log *WAL) Append(putCommand PutCommand) error {
 	return appendToActiveSegment()
 }
 
-func (log *WAL) MarkTransactionWith(transactionStatus TransactionStatus) error {
-	status := byte(transactionStatus)
-	return log.activeSegment.Append(PersistentLogSlice{contents: []byte{status}})
+func (log *WAL) Append(persistentLogSlice PersistentLogSlice) error {
+	appendToActiveSegment := func() error {
+		if err := log.activeSegment.Append(persistentLogSlice); err != nil {
+			return err
+		}
+		return nil
+	}
+	return appendToActiveSegment()
 }
 
-func (log *WAL) ReadAll() ([]PersistentKeyValuePair, error) {
+func (log *WAL) MarkTransactionWith(transactionStatus TransactionStatus) error {
+	return log.activeSegment.Append(PersistentLogSlice{contents: transactionStatus.Marshal()})
+}
+
+func (log *WAL) ReadAll() ([]TransactionalEntry, error) {
 	allSegments := func() []*Segment {
 		copiedPassiveSegments := make([]*Segment, len(log.passiveSegments))
 		copy(copiedPassiveSegments, log.passiveSegments)
 
 		return append(copiedPassiveSegments, log.activeSegment)
 	}
-	readAllSegments := func() ([]PersistentKeyValuePair, error) {
-		var allKeyValuePairs []PersistentKeyValuePair
+	readAllSegments := func() ([]TransactionalEntry, error) {
+		var allEntries []TransactionalEntry
 		for _, segment := range allSegments() {
-			if keyValuePairs, err := segment.ReadAll(); err != nil {
+			if transactionalEntries, err := segment.ReadAll(); err != nil {
 				return nil, err
 			} else {
-				allKeyValuePairs = append(allKeyValuePairs, keyValuePairs...)
+				allEntries = append(allEntries, transactionalEntries...)
 			}
 		}
-		return allKeyValuePairs, nil
+		return allEntries, nil
 	}
 	return readAllSegments()
 }

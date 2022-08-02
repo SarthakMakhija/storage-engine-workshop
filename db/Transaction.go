@@ -2,23 +2,28 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"storage-engine-workshop/db/model"
-	"storage-engine-workshop/log"
 )
 
 type Transaction struct {
-	log   *log.WAL
-	batch *Batch
+	executor *RequestExecutor
+	batch    *Batch
 }
 
 type ReadonlyTransaction struct {
 	executor *RequestExecutor
 }
 
-func newTransaction(log *log.WAL, executor *RequestExecutor) *Transaction {
+const (
+	maxCapacityAllowed uint8  = 255
+	maxSizeAllowed     uint16 = 65535
+)
+
+func newTransaction(executor *RequestExecutor) *Transaction {
 	return &Transaction{
-		log:   log,
-		batch: newBatch(executor),
+		executor: executor,
+		batch:    NewBatch(),
 	}
 }
 
@@ -29,9 +34,11 @@ func newReadonlyTransaction(executor *RequestExecutor) ReadonlyTransaction {
 }
 
 func (txn *Transaction) Put(key, value model.Slice) error {
-	err := txn.log.Append(log.NewPutCommand(model.KeyValuePair{Key: key, Value: value}))
-	if err != nil {
-		return err
+	if txn.batch.isTotalPairCountGreaterThan(maxCapacityAllowed) {
+		return errors.New(fmt.Sprintf("can not add more than the maximum key/value %v pairs in a transaction", maxCapacityAllowed))
+	}
+	if txn.batch.isTotalSizeGreaterThan(maxSizeAllowed) {
+		return errors.New(fmt.Sprintf("can not add more than the total key/value pair size %v in a transaction", maxSizeAllowed))
 	}
 	txn.batch.add(key, value)
 	return nil
@@ -41,12 +48,7 @@ func (txn *Transaction) Commit() error {
 	if txn.batch.isEmpty() {
 		return errors.New("nothing to commit, put key/value before committing")
 	}
-	err := txn.batch.putInMemtable()
-	if err != nil {
-		_ = txn.log.MarkTransactionWith(log.TransactionStatusFailed)
-		return err
-	}
-	return txn.log.MarkTransactionWith(log.TransactionStatusSuccess)
+	return <-txn.executor.put(txn.batch)
 }
 
 func (txn ReadonlyTransaction) Get(key model.Slice) model.GetResult {
