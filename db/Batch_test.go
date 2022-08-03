@@ -32,24 +32,6 @@ func TestBatchKeyValuePairCount(t *testing.T) {
 	}
 }
 
-func TestBatchTotalPairCountGreaterThanAsFalse(t *testing.T) {
-	batch := NewBatch()
-	batch.add(model.NewSlice([]byte("key-1")), model.NewSlice([]byte("value-1")))
-
-	if isGreater := batch.isTotalPairCountGreaterThan(1); isGreater {
-		t.Fatalf("Expected batch isTotalPairCountGreaterThan 1 to return false but it returned true")
-	}
-}
-
-func TestBatchTotalPairCountGreaterThanAsTrue(t *testing.T) {
-	batch := NewBatch()
-	batch.add(model.NewSlice([]byte("key-1")), model.NewSlice([]byte("value-1")))
-
-	if isGreater := batch.isTotalPairCountGreaterThan(0); !isGreater {
-		t.Fatalf("Expected batch isTotalPairCountGreaterThan 0 to return true but it returned false")
-	}
-}
-
 func TestBatchIsTotalSizeGreaterThanAsFalse(t *testing.T) {
 	batch := NewBatch()
 	batch.add(model.NewSlice([]byte("key-1")), model.NewSlice([]byte("value-1")))

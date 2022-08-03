@@ -21,22 +21,6 @@ func TestAttemptsToCommitATransactionWithEmptyBatch(t *testing.T) {
 	}
 }
 
-func TestAttemptsToCommitATransactionWithTotalKeyValuePairsGreaterThanAllowed(t *testing.T) {
-	executor, directory := initRequestExecutor()
-	defer os.RemoveAll(directory)
-
-	transaction := newTransaction(executor)
-
-	var err error
-	for count := 1; count <= int(maxCapacityAllowed)+2; count++ {
-		err = transaction.Put(model.NewSlice([]byte("Key")), model.NewSlice([]byte("Value")))
-	}
-
-	if err == nil {
-		t.Fatalf("Expected an error on adding more key/value pairs than allowed but received none")
-	}
-}
-
 func TestPutsAKeyValuePairAndGetsByKey(t *testing.T) {
 	executor, directory := initRequestExecutor()
 	defer os.RemoveAll(directory)

@@ -87,7 +87,7 @@ func TestPutsKeyValuePairsConcurrently(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			txn := db.newTransaction()
-			for index := 1; index <= 200; index++ {
+			for index := 1; index <= 500; index++ {
 				_ = txn.Put(keyUsing(id, index), valueUsing(id, index))
 			}
 			_ = txn.Commit()
@@ -95,11 +95,11 @@ func TestPutsKeyValuePairsConcurrently(t *testing.T) {
 	}
 
 	wg.Wait()
-	allowFlushingSSTableFor(2 * time.Second)
+	allowFlushingSSTableFor(5 * time.Second)
 
 	readonlyTxn := db.newReadonlyTransaction()
 	for goroutineId := 1; goroutineId <= 10; goroutineId++ {
-		for count := 1; count <= 200; count++ {
+		for count := 1; count <= 500; count++ {
 			getResult := readonlyTxn.Get(keyUsing(goroutineId, count))
 			expectedValue := valueUsing(goroutineId, count)
 

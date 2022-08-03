@@ -31,10 +31,6 @@ func (batch *Batch) isEmpty() bool {
 	return batch.totalPairs() == 0
 }
 
-func (batch *Batch) isTotalPairCountGreaterThan(allowedPairCount uint8) bool {
-	return batch.totalPairs() > int(allowedPairCount)
-}
-
 func (batch *Batch) isTotalSizeGreaterThan(allowedSize uint16) bool {
 	return batch.totalSize() > allowedSize
 }

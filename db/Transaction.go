@@ -16,8 +16,7 @@ type ReadonlyTransaction struct {
 }
 
 const (
-	maxCapacityAllowed uint8  = 255
-	maxSizeAllowed     uint16 = 65535
+	maxSizeAllowedBytes uint16 = 65535
 )
 
 func newTransaction(executor *RequestExecutor) *Transaction {
@@ -34,11 +33,8 @@ func newReadonlyTransaction(executor *RequestExecutor) ReadonlyTransaction {
 }
 
 func (txn *Transaction) Put(key, value model.Slice) error {
-	if txn.batch.isTotalPairCountGreaterThan(maxCapacityAllowed) {
-		return errors.New(fmt.Sprintf("can not add more than the maximum key/value %v pairs in a transaction", maxCapacityAllowed))
-	}
-	if txn.batch.isTotalSizeGreaterThan(maxSizeAllowed) {
-		return errors.New(fmt.Sprintf("can not add more than the total key/value pair size %v in a transaction", maxSizeAllowed))
+	if txn.batch.isTotalSizeGreaterThan(maxSizeAllowedBytes) {
+		return errors.New(fmt.Sprintf("can not add more than the total key/value pair size %v in a transaction", maxSizeAllowedBytes))
 	}
 	txn.batch.add(key, value)
 	return nil
