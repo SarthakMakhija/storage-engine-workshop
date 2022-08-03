@@ -7,7 +7,7 @@ This repository is supposed to contain the following:
 - [X] Implementation of Memtable
 - [X] Implementation of SSTable
 - [X] Implementation of concurrency, using either a single writer/multiple readers pattern or a singular update queue pattern
-- [X] Implementation of write-ahead logging
+- [X] Implementation of segmented write-ahead logging
 - [X] Implementation of transactions
 - [X] Implementation of Bloom filter
 - [X] Implementation of "Put", "Get", "MultiGet"
