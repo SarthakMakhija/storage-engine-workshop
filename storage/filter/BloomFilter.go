@@ -9,7 +9,9 @@ import (
 	"unsafe"
 )
 
-const byteSize = int(unsafe.Sizeof(byte(0)))
+var aByte byte
+
+const byteSize = int(unsafe.Sizeof(aByte))
 
 type BloomFilter struct {
 	capacity              int
@@ -65,7 +67,7 @@ func (bloomFilter *BloomFilter) Has(key model.Slice) bool {
 		if int(bytePosition) >= bloomFilter.store.Size() {
 			return false
 		}
-		if bloomFilter.store.GetBit(bytePosition)&mask == 0 {
+		if bloomFilter.store.GetByte(bytePosition)&mask == 0 {
 			return false
 		}
 	}

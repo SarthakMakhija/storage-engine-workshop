@@ -40,7 +40,7 @@ func (store *Store) SetBit(index uint64, mask byte) {
 	store.memoryMappedRegion[index] = store.memoryMappedRegion[index] | mask
 }
 
-func (store *Store) GetBit(index uint64) byte {
+func (store *Store) GetByte(index uint64) byte {
 	return store.memoryMappedRegion[index]
 }
 
