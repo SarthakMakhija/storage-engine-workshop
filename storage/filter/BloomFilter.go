@@ -11,7 +11,7 @@ import (
 
 var aByte byte
 
-const byteSize = int(unsafe.Sizeof(aByte))
+const byteSize = int(unsafe.Sizeof(&aByte))
 
 type BloomFilter struct {
 	capacity              int
@@ -80,11 +80,14 @@ func (bloomFilter *BloomFilter) Close() {
 
 func (bloomFilter *BloomFilter) bitPositionInByte(keyIndex uint64) (uint64, byte) {
 	quotient, remainder := int64(keyIndex)/int64(byteSize), int64(keyIndex)%int64(byteSize)
-	maxPossibleValue := int64(math.Pow(2, float64(byteSize)-1)) //128
+	valueWithMostSignificantBit := int64(math.Pow(2, float64(byteSize)-1)) //128
 	if remainder == 0 {
-		return uint64(quotient), byte(maxPossibleValue)
+		if quotient == 0 {
+			return uint64(quotient), byte(valueWithMostSignificantBit)
+		}
+		return uint64(quotient - 1), byte(valueWithMostSignificantBit)
 	}
-	return uint64(quotient), byte(0x0001 << (remainder - 1))
+	return uint64(quotient), byte(0x01 << (remainder - 1))
 }
 
 // Use the hash function to get all keyIndices of the given key

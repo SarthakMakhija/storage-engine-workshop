@@ -107,3 +107,6 @@ func TestAddsAKeyWithMultipleBloomFiltersAndChecksForItsPositiveExistenceSimulat
 		}
 	}
 }
+
+//https://www.codementor.io/@arpitbhayani/the-rum-conjecture-16z2ckqte9
+//https://segmentfault.com/a/1190000041198407/en
