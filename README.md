@@ -14,8 +14,6 @@ This repository is supposed to contain the following:
 - [X] Implementation of "Get" and "MultiGet" in Memtable and SSTable
 - [ ] Implementation of "Update" using versioned put (Next version)
 
-# Build Status
-[![Actions Status](https://github.com/SarthakMakhija/storage-engine-workshop/workflows/GoCI/badge.svg)](https://github.com/SarthakMakhija/storage-engine-workshop/actions)
+# Revised code
 
-# Running the tests
-`go test -v ./...`
+The updated code is available [here](https://github.com/SarthakMakhija/go-lsm)
