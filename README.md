@@ -16,4 +16,4 @@ This repository is supposed to contain the following:
 
 # Revised code
 
-The updated code is available [here](https://github.com/SarthakMakhija/go-lsm)
+The revised code is available [here](https://github.com/SarthakMakhija/go-lsm)
